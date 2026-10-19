@@ -15,19 +15,33 @@
 - 后续新增目录前，先在本文件中定义其用途、内容分类、命名规范和清理策略，再创建目录。
 - 文档使用有明确含义的英文文件名；Python 包、模块使用 snake_case，其他业务目录优先使用 kebab-case。
 - 临时输出不得混入源码；确需保留的生成产物必须先约定目录与清理方式。
+- 用户要求仓库只保留业务应用源码、必要运行/打包配置及已有项目文档。测试代码、测试样例、测试专用依赖/配置、覆盖率/验证报告和缓存不得进入Git；不在pyproject.toml或业务uv.lock维护测试工具。测试仅按需在本地进行。
 
 ### 后续工程目录预案
 
-以下仅约定未来目录用途，本次任务不创建这些目录。实施前须在目标目录的规范中补齐内部结构；任何新增子目录也必须先遵循已有约定，未覆盖时先更新规范。
+当前启动 T01 最小工程，按以下用途逐项创建必要目录，不预建未使用的业务模块。任何新增子目录必须先遵循已有约定，未覆盖时先更新规范。
 
 | 路径 | 内容与命名 | 清理策略 |
 | --- | --- | --- |
 | `src/knowledge_ci/` | Python 应用包；按 `contracts`、`repository`、`analysis`、`evidence`、`knowledge`、`review`、`jobs`、`storage`、`web`、`integrations` 分模块；入口 `cli.py`、`app.py` | 源码长期保留；模块命名 snake_case，不放生成数据 |
 | `src/knowledge_ci/web/templates/`、`src/knowledge_ci/web/static/` | 服务端模板及静态资源；模板和资源按所属功能命名 | 保留源文件；不提交缓存与构建产物 |
-| `tests/` | `unit`、`integration`、`e2e`、`fixtures` 分类；测试文件 `test_*.py`，样例仅使用合成或获授权的脱敏数据 | 基准样例入库；测试运行输出可删除 |
+| `var/local-checks/`（仅本地，Git忽略） | `tests/`按`unit`、`integration`、`e2e`、`fixtures`分类；`pytest.ini`、`README.md`记录本地验证方式；`reports/`按需存报告 | 不入库、不打包；样例只用合成/脱敏数据，临时运行数据用后清理；长期本地用例按需保留 |
 | `migrations/` | 数据库迁移，使用迁移工具生成的有序版本名 | 已应用迁移不可随意改写或删除 |
 | `docs/decisions/` | 工程启动后记录决策；文件名 `NNNN-kebab-case.md` | 长期保留；替代旧决策须保留关联记录 |
+| `tools/parser/`（T06按需创建） | Vue SFC/JS/TS静态解析辅助工具；`index.mjs`、`package.json`、`package-lock.json`；仅接收源码数据并输出JSON | 工具源码/锁文件入库；`node_modules`与缓存忽略，不执行目标仓库代码 |
 | `var/` | 本地运行数据，按 `db`、`cache`、`artifacts`、`logs`、`tmp` 分类；须在创建时加入 Git 忽略 | `cache` 可重建，`tmp` 任务结束清理，日志轮转；数据库与证据产物先备份并核对引用再清理 |
+
+### T01 结构与运行约定
+
+- `src/` 只放应用源包；`src/knowledge_ci/` 当前仅创建 `__init__.py`、`__main__.py`、`app.py`、`cli.py`、`config.py`，不预建业务目录。
+- 业务源码目录不放测试。现有T01测试迁到`var/local-checks/tests/unit/`与`var/local-checks/tests/integration/`，共享夹具为本地`tests/conftest.py`；这些文件及本地pytest.ini均不入库。验证工具通过临时环境按需提供，不纳入业务依赖。
+- `docs/decisions/` 当前创建 `0001-baseline.md`，记录已落地技术决定、验证环境与未确定的试点信息；不存私有源码或凭据。
+- `.venv/` 为项目隔离环境；`var/cache/uv/` 为可重建依赖缓存，`var/cache/uv-bootstrap/` 为可重建的本地依赖工具；均不入 Git。任务临时验证环境放在 `var/tmp/`，验证后清理。
+- 工具自动生成的Python `__pycache__/` 可在所属模块内出现，忽略并按需清理；Ruff/pytest缓存分别放 `var/cache/ruff/`、`var/cache/pytest/`。构建包放 `var/artifacts/packages/`，文件名由构建工具生成，可重新构建；`.venv/`和缓存内部由相应工具管理，不手改依赖文件。
+- `var/cache/repositories/vue3-admin/` 存放用户指定试点的只读克隆；保持 Git 历史，不运行项目脚本、不安装其依赖、不改写原项目。目录可重建，清理前核对是否仍被本地试点配置引用。
+- 根目录允许 `README.md`、`.python-version`、`uv.lock`、`pyproject.toml`、`.gitignore`、`.env.example`；依赖由 uv 锁定并使用 locked 模式安装，Python 基线为 3.12。
+- 配置统一使用 `KNOWLEDGE_CI_` 前缀；缺少真实试点或模型权限时允许本机空应用启动，涉及试点的检查必须明确失败，不能虚构已配置仓库。
+- 用户允许后续接入外部模型，供应商和预算待确定；当前 T01 仍为假响应、源码外发关闭、模型预算为 0，真实接入前记录明确约定。
 
 根目录后续仅按需新增 `pyproject.toml`、依赖锁文件、`.gitignore`、脱敏的 `.env.example` 与工程说明；不得提前生成空目录或未使用的配置。
 
@@ -45,6 +59,7 @@
 
 ## 本阶段验证
 
-- 项目计划须逐项核对 HTML 设计中的能力与数据示例，标出演示内容、需求缺口和实施建议。
-- 多人开发计划至少包含范围、模块边界、接口与数据约定、依赖顺序、里程碑、验收标准、风险和待确认事项。
-- 本阶段仅建立规范与计划，不引入依赖、不搭建应用、不修改原型。
+- 当前仅实施 T01：最小可安装工程、配置、空应用/CLI、健康检查与基线决策；不提前实现 T02 领域契约或后续扫描业务。
+- 验证锁文件安装、CLI 帮助/版本/配置检查、无效或缺失配置、健康请求与退出；在独立干净环境重复安装和验证。
+- 运行命令、环境、结果与未确定项写入 README、基线决策及 TASK_PLAN；真实试点未确定时 T01 保持进行中或待验收，不虚报完成。
+- 不修改原 HTML，不自动创建/切换分支、提交、推送或部署。
