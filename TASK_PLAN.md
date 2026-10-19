@@ -4,7 +4,7 @@
 - 当前负责人：Recall；系统实现语言：Python；分支创建和合并由 Recall 管理。
 - 本文件负责逐任务排期、状态、实际用时与验收记录；[主计划](D:/knowledge_ci/PROJECT_PLAN.md)负责需求范围、架构、数据契约和阶段验收基线。
 - 共 40 项任务，每项 2～3 个工作日，平均 2.65 天。优先执行 P0 的 24 项任务；P1/P2 是后续预备队列。
-- 状态初值均为“待开始”；所有建议分支均未由本次任务创建。目标代码路径是待实现位置，不表示文件已经存在。
+- T01工程与自动验证完成，待验收，使用用户创建的feat/hyw/T01分支；其余状态以总表为准。卡片末尾分支名仍是建议，目标文件按实施进度创建。
 
 ## 1. 排期怎么使用
 
@@ -52,12 +52,12 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 
 | 任务 | 天数 | 相对工作日 | 技术前置 | 状态 | 实际天数 |
 | --- | --- | --- | --- | --- | --- |
-| [T01 确定试点与最小 Python 工程](#t01) | 2 | D001～D002 | 无 | 待开始 | — |
+| [T01 确定试点与最小 Python 工程](#t01) | 2 | D001～D002 | 无 | 待验收 | 本会话完成；人日待录 |
 | [T02 冻结共享模型与状态契约](#t02) | 3 | D003～D005 | T01 | 待开始 | — |
 | [T03 建立可重复的 Git 与知识样例](#t03) | 2 | D006～D007 | T02 | 待开始 | — |
 | [T04 建立基础存储与迁移](#t04) | 3 | D008～D010 | T02、T03 | 待开始 | — |
 | [T05 实现只读 Git 快照访问](#t05) | 2 | D011～D012 | T03、T04 | 待开始 | — |
-| [T06 提取 Python AST 与符号](#t06) | 3 | D013～D015 | T05 | 待开始 | — |
+| [T06 解析 Vue/JS/TS 并提取符号](#t06) | 3 | D013～D015 | T05 | 待开始 | — |
 | [T07 建立 import 依赖图](#t07) | 2 | D016～D017 | T06 | 待开始 | — |
 | [T08 计算 Git 信号与 Top-K](#t08) | 3 | D018～D020 | T05、T07 | 待开始 | — |
 | [T09 实现首批候选线索规则](#t09) | 2 | D021～D022 | T06、T07、T08 | 待开始 | — |
@@ -110,7 +110,7 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 - 卡片中的行为和验收已实现，并运行受影响的验证；不能只有代码提交、没有结果证据。
 - 跨模块模型沿用主计划第5节；已有字段、错误语义和状态机变更先更新契约/样例，再改调用方。
 - 新目录/子目录先依照 AGENTS.md 与 CLAUDE.md 补齐结构、命名和清理约定，再创建实现文件。
-- 任务卡中的路径均相对于 D:\knowledge_ci；下级目录和测试文件是建议落点，开工时根据实际代码校准并先更新卡片。共享文件须明确本次只改哪一部分。
+- 任务卡中的路径均相对于D:\knowledge_ci。业务文件入库；var/local-checks/中的测试代码、样例、配置和报告仅保留本地，不入库、不打包，验证工具不写入业务依赖。开工时先校准文件落点。
 - 数据迁移只新增有序迁移，不随意改写已应用版本；任务卡中的 migrations/ 指该任务实际生成的版本文件，开工后记录准确名称。
 - 安全、幂等、CAS、任务租约等基础规则从首次实现相关入口时生效；后期任务负责补齐故障场景，不把基础正确性延后。
 - 在第6节填写实际用时、分支、提交或PR、验证证据与遗留项，再将总表状态改为已完成。
@@ -140,13 +140,14 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 
 - 工期：2天；计划 D001～D002；里程碑 M0；对应原工作包 S01。
 - 前置：无。
-- 输入与契约：用户已确认单人和 Python；主计划第 3、11 节的建议仍需在本任务落定。
-- 目标路径：`AGENTS.md`、`CLAUDE.md`、`pyproject.toml`、`.gitignore`、`.env.example`、`src/knowledge_ci/app.py`、`src/knowledge_ci/cli.py`、`docs/decisions/0001-baseline.md`。
+- 输入与契约：用户已确认单人/Python、Vue3Admin试点及后续允许外部模型；主基线77e9634，供应商和预算待定。
+- 目标路径：`AGENTS.md`、`CLAUDE.md`、`pyproject.toml`、`uv.lock`、`.python-version`、`.gitignore`、`.env.example`、`README.md`、`src/knowledge_ci/{__init__,__main__,app,cli,config}.py`、`var/local-checks/tests/conftest.py`、`var/local-checks/tests/unit/test_config.py`、`var/local-checks/tests/integration/test_app.py`、`docs/decisions/0001-baseline.md`。
 - 第1天：将规范的当前阶段切换为工程实现并补齐拟创建目录的约定；选定试点commit/目标语言/知情者、依赖组合、预算和运行边界，记录决定。
 - 第2天：建立可重复安装的最小工程、空应用/CLI、配置加载及验证命令；验证启动、退出和配置缺失提示。
 - 验收/合入：另一套干净环境按记录可安装并启动；真实试点路径/commit、模型数据政策与待处理外部依赖均有记录。
 - 范围或等待说明：先以合成样例推进；真实仓库授权或模型开通的等待时间另记。
-- 建议分支：`codex/t01-project-baseline`。
+- 实施记录：2026-10-19，使用用户分支`feat/hyw/T01`；已锁定依赖、CLI/真实试点校验、18项测试、Ruff及独立wheel安装复验通过。具体命令与结果见`docs/decisions/0001-baseline.md`；尚未提交或合入。
+- 建议分支：`codex/t01-project-baseline`（仅原建议，实际以用户分支为准）。
 
 <a id="t02"></a>
 
@@ -155,7 +156,7 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 - 工期：3天；计划 D003～D005；里程碑 M0；对应原工作包 S02。
 - 前置：T01。
 - 输入与契约：主计划第 5 节；Snapshot/AnalysisRun 分离，Knowledge 内容修订与 state_version 分离。
-- 目标路径：`src/knowledge_ci/contracts/repository.py`、`src/knowledge_ci/contracts/knowledge.py`、`src/knowledge_ci/contracts/jobs.py`、`src/knowledge_ci/contracts/errors.py`、`tests/unit/test_contracts.py`。
+- 目标路径：`src/knowledge_ci/contracts/repository.py`、`src/knowledge_ci/contracts/knowledge.py`、`src/knowledge_ci/contracts/jobs.py`、`src/knowledge_ci/contracts/errors.py`、`var/local-checks/tests/unit/test_contracts.py`。
 - 第1天：定义仓库、快照、分析执行、符号、证据和任务模型；列必填、可空、ID及时间规范。
 - 第2天：定义知识、Claim、追问、审核、验证记录与状态转换；固定请求、响应和错误结构。
 - 第3天：补正反例与状态转换用例；核对幂等、租约、阻断追问、失效条件和发布前提。
@@ -168,9 +169,9 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 
 - 工期：2天；计划 D006～D007；里程碑 M0；对应原工作包 S02。
 - 前置：T02。
-- 输入与契约：T02 schema；样例不得包含真实私有仓库内容。
-- 目标路径：`tests/fixtures/repository_builder.py`、`tests/fixtures/knowledge_cases.json`、`tests/integration/test_fixture_repository.py`。
-- 第1天：编写小型 Git 历史生成器：引入约束、修复、改名、格式变化、异常捕获、循环 import 和动态 import。
+- 输入与契约：T02 schema；目标为JS/TS/Vue SFC，样例不得包含真实私有仓库内容。
+- 目标路径：`var/local-checks/tests/fixtures/repository_builder.py`、`var/local-checks/tests/fixtures/knowledge_cases.json`、`var/local-checks/tests/integration/test_fixture_repository.py`。
+- 第1天：编写小型 Git 历史生成器：引入约束、修复、改名、格式变化、空catch、循环import和动态import；加入字符串内注释标记、SFC块与@/*别名。
 - 第2天：列预期符号/边、Top-K信号、证据、知识与追问输出；保存夹具生成和清理方式。
 - 验收/合入：每次生成得到等价历史与预期结果；测试工作目录在运行结束清理；样例可供所有后续模块共用。
 - 建议分支：`codex/t03-golden-fixtures`。
@@ -182,7 +183,7 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 - 工期：3天；计划 D008～D010；里程碑 M1；对应原工作包 S03。
 - 前置：T02、T03。
 - 输入与契约：Repository/Snapshot/AnalysisRun/Job/Evidence 契约；知识表按 T14 再增量迁移。
-- 目标路径：`src/knowledge_ci/storage/database.py`、`src/knowledge_ci/storage/models.py`、`src/knowledge_ci/storage/artifacts.py`、`migrations/env.py`、`tests/integration/test_storage.py`。
+- 目标路径：`src/knowledge_ci/storage/database.py`、`src/knowledge_ci/storage/models.py`、`src/knowledge_ci/storage/artifacts.py`、`migrations/env.py`、`var/local-checks/tests/integration/test_storage.py`。
 - 第1天：搭建数据库会话、迁移入口与基础表；固定外键、唯一键和任务/产物去重约束。
 - 第2天：实现事务访问与逻辑产物 ID、内容哈希存取；不把机器绝对路径写成业务引用。
 - 第3天：验证空库升级、事务回滚、唯一约束、短事务及写锁重试；补基础迁移用例。
@@ -196,7 +197,7 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 - 工期：2天；计划 D011～D012；里程碑 M1；对应原工作包 S04。
 - 前置：T03、T04。
 - 输入与契约：本地仓库允许根目录、ref → 完整 commit SHA → Snapshot；Git 通过参数数组调用。
-- 目标路径：`src/knowledge_ci/repository/git_reader.py`、`src/knowledge_ci/repository/snapshot.py`、`src/knowledge_ci/repository/path_policy.py`、`tests/integration/test_git_snapshot.py`。
+- 目标路径：`src/knowledge_ci/repository/git_reader.py`、`src/knowledge_ci/repository/snapshot.py`、`src/knowledge_ci/repository/path_policy.py`、`var/local-checks/tests/integration/test_git_snapshot.py`。
 - 第1天：校验本地 Git 路径与ref，固定SHA/tree；从固定版本枚举/读取文件并保存快照身份。
 - 第2天：处理未提交修改、移动分支、路径越界、符号链接、大小限制及无效ref；补反例。
 - 验收/合入：分支前进或工作区改动不改变已建立快照；不执行仓库脚本、不写仓库；越界/无效输入有明确错误。
@@ -204,17 +205,17 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 
 <a id="t06"></a>
 
-### T06 提取 Python AST 与符号
+### T06 解析 Vue/JS/TS 并提取符号
 
 - 工期：3天；计划 D013～D015；里程碑 M1；对应原工作包 S05。
 - 前置：T05。
-- 输入与契约：T01 目标语言确认采用 Python 时启用；Symbol 关联 snapshot_id 与 analysis_run_id。
-- 目标路径：`src/knowledge_ci/analysis/parser.py`、`src/knowledge_ci/analysis/symbols.py`、`tests/unit/test_symbols.py`。
-- 第1天：实现文件编码处理、AST解析、语法版本检查与诊断收集。
-- 第2天：提取模块、类、函数、异步函数和嵌套限定名；保存相对路径与行号范围。
+- 输入与契约：已选Vue SFC/TS/JS；Symbol关联snapshot_id/analysis_run_id，SFC脚本位置映射回原文件。
+- 目标路径：`src/knowledge_ci/analysis/parser.py`、`src/knowledge_ci/analysis/symbols.py`、`tools/parser/package.json`、`tools/parser/index.mjs`、`tools/parser/package-lock.json`、`var/local-checks/tests/unit/test_symbols.py`。
+- 第1天：验证隔离的Vue官方SFC解析及JS/TS辅助解析，冻结JSON输出与工具版本；不执行目标项目插件或脚本。
+- 第2天：提取组件、模块、类、函数和导出符号，处理script/script setup及原文件行号映射。
 - 第3天：验证语法不支持、解析失败、空文件、大文件和重复名称；保证失败文件可见。
 - 验收/合入：黄金样例符号/位置正确；部分失败不会被报为全仓成功；同输入产物稳定。
-- 范围或等待说明：如果 T01 选择其他目标语言，重排 T06/T07/T09/T27；系统实现语言仍为 Python。
+- 范围或等待说明：系统仍为Python；目标已改Vue/JS/TS。若辅助解析工具验证超出3天，拆T06子任务并重排，不假定语言变更零成本。
 - 建议分支：`codex/t06-python-symbols`。
 
 <a id="t07"></a>
@@ -224,8 +225,8 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 - 工期：2天；计划 D016～D017；里程碑 M1；对应原工作包 S05。
 - 前置：T06。
 - 输入与契约：T06 的模块与符号；T01 固定的包目录/src布局。
-- 目标路径：`src/knowledge_ci/analysis/import_graph.py`、`tests/unit/test_import_graph.py`。
-- 第1天：解析绝对/相对 import，区分仓库内、第三方与未解析目标，输出带来源的边。
+- 目标路径：`src/knowledge_ci/analysis/import_graph.py`、`var/local-checks/tests/unit/test_import_graph.py`。
+- 第1天：解析静态/字面量动态import、相对路径及@/*别名，区分仓库内/第三方/unknown，输出带来源的边。
 - 第2天：计算入度/出度与循环组件，验证重复边、动态import、缺失模块和包重导出。
 - 验收/合入：黄金样例静态边与循环结果正确；无法静态确定的关系为 unknown，不宣称完整调用图。
 - 建议分支：`codex/t07-import-graph`。
@@ -237,7 +238,7 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 - 工期：3天；计划 D018～D020；里程碑 M1；对应原工作包 S06。
 - 前置：T05、T07。
 - 输入与契约：目标commit、观察窗口、图入度、版本化权重；缺失信号独立标识。
-- 目标路径：`src/knowledge_ci/repository/history.py`、`src/knowledge_ci/analysis/scoring.py`、`tests/integration/test_module_ranking.py`。
+- 目标路径：`src/knowledge_ci/repository/history.py`、`src/knowledge_ci/analysis/scoring.py`、`var/local-checks/tests/integration/test_module_ranking.py`。
 - 第1天：采集截至目标commit的文件变更频率与贡献者信息，处理历史不足与文件改名记录。
 - 第2天：实现信号归一化、权重、K、稳定排序及得分解释；保存配置摘要。
 - 第3天：验证同快照同配置可复现、同快照不同配置产物分离及并列排序。
@@ -251,8 +252,8 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 - 工期：2天；计划 D021～D022；里程碑 M1；对应原工作包 S06。
 - 前置：T06、T07、T08。
 - 输入与契约：Top-K模块、AST、循环边；首批仅三类规则。
-- 目标路径：`src/knowledge_ci/analysis/rules.py`、`src/knowledge_ci/contracts/candidates.py`、`tests/unit/test_candidate_rules.py`。
-- 第1天：实现循环import、比较/控制条件中的硬编码阈值、宽泛异常捕获，生成位置与规则版本。
+- 目标路径：`src/knowledge_ci/analysis/rules.py`、`src/knowledge_ci/contracts/candidates.py`、`var/local-checks/tests/unit/test_candidate_rules.py`。
+- 第1天：实现循环import、比较/控制条件中的硬编码阈值、空catch/静默降级候选，生成位置与规则版本。
 - 第2天：建立误报/排除样例与稳定候选键；输出触发原因和局限。
 - 验收/合入：三类规则有正反例，重跑不重复候选；输出是待核验线索，不能直接作为业务事实。
 - 范围或等待说明：复杂状态机、跨函数数据流和自动事故归因不加入本任务。
@@ -265,7 +266,7 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 - 工期：2天；计划 D023～D024；里程碑 M1；对应原工作包 S07。
 - 前置：T04、T05、T08、T09。
 - 输入与契约：候选位置、固定Snapshot、Git历史 → Evidence集合与缺口。
-- 目标路径：`src/knowledge_ci/evidence/collector.py`、`src/knowledge_ci/evidence/locator.py`、`tests/integration/test_evidence_bundle.py`。
+- 目标路径：`src/knowledge_ci/evidence/collector.py`、`src/knowledge_ci/evidence/locator.py`、`var/local-checks/tests/integration/test_evidence_bundle.py`。
 - 第1天：获取固定版本代码片段与相关commit，保存定位、内容哈希和原始材料引用。
 - 第2天：建立候选—证据关联；核验可回读、缺失历史、重命名与无法定位情况。
 - 验收/合入：候选能回查到固定commit及代码位置；证据缺失显式记录；commit说明仅是来源材料，不自动成为事实。
@@ -278,7 +279,7 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 - 工期：3天；计划 D025～D027；里程碑 M1；对应原工作包 S08。
 - 前置：T04、T10。
 - 输入与契约：完整静态流水线；Job幂等键、阶段检查点、attempt/lease_token已在T02/T04定义。
-- 目标路径：`src/knowledge_ci/jobs/service.py`、`src/knowledge_ci/jobs/worker.py`、`src/knowledge_ci/cli.py`、`tests/integration/test_analysis_job.py`。
+- 目标路径：`src/knowledge_ci/jobs/service.py`、`src/knowledge_ci/jobs/worker.py`、`src/knowledge_ci/cli.py`、`var/local-checks/tests/integration/test_analysis_job.py`。
 - 第1天：实现持久化任务提交、领取、阶段状态与单worker执行；按analysis_run保存产物。
 - 第2天：串联快照→AST→图→评分→规则→证据，提供CLI启动、查询、结果导出。
 - 第3天：实现基本重复请求去重、提交凭据检查和检查点；验证成功/partial/失败及阶段进度。
@@ -293,7 +294,7 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 - 工期：3天；计划 D028～D030；里程碑 M2；对应原工作包 S09。
 - 前置：T02、T10、T11。
 - 输入与契约：EvidenceBundle、固定假响应；一个已获准使用的真实模型提供方。
-- 目标路径：`src/knowledge_ci/knowledge/model_gateway.py`、`src/knowledge_ci/knowledge/budget.py`、`tests/unit/test_model_gateway.py`、`src/knowledge_ci/storage/model_call_store.py`、`tests/integration/test_model_budget.py`、`migrations/`。
+- 目标路径：`src/knowledge_ci/knowledge/model_gateway.py`、`src/knowledge_ci/knowledge/budget.py`、`var/local-checks/tests/unit/test_model_gateway.py`、`src/knowledge_ci/storage/model_call_store.py`、`var/local-checks/tests/integration/test_model_budget.py`、`migrations/`。
 - 第1天：定义供应商无关输入输出与假响应适配器；记录输入哈希、模型/提示词版本。
 - 第2天：接入一个真实提供方；实现输入范围校验、脱敏、持久化预算预占/调用账本、超时和调用记录，新增所需迁移。
 - 第3天：验证限额、重启、超时和重试后的预算结算：不清零、不重复释放、不遗漏可能计费的调用；用授权样例完成最小真实调用。
@@ -308,7 +309,7 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 - 工期：3天；计划 D031～D033；里程碑 M2；对应原工作包 S09。
 - 前置：T09、T10、T12。
 - 输入与契约：Claim/Evidence/KnowledgeRevision schema；正式知识只能经后续人工审核发布。
-- 目标路径：`src/knowledge_ci/knowledge/generator.py`、`src/knowledge_ci/knowledge/claim_validator.py`、`tests/unit/test_draft_generation.py`。
+- 目标路径：`src/knowledge_ci/knowledge/generator.py`、`src/knowledge_ci/knowledge/claim_validator.py`、`var/local-checks/tests/unit/test_draft_generation.py`。
 - 第1天：编写版本化生成模板，要求设计原因、范围、失效条件、结论类型和证据ID。
 - 第2天：实现结构校验、引用校验、证据充分度与问题建议；保留未知项。
 - 第3天：固定样例回放并核验至少两条真实草稿；记录无价值摘要/伪引用并调整一次。
@@ -323,7 +324,7 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 - 工期：3天；计划 D034～D036；里程碑 M2；对应原工作包 S03、S10。
 - 前置：T04、T13。
 - 输入与契约：Knowledge聚合、不可变Revision、current/published指针及state_version。
-- 目标路径：`src/knowledge_ci/storage/knowledge_store.py`、`src/knowledge_ci/knowledge/service.py`、`src/knowledge_ci/knowledge/queries.py`、`tests/integration/test_knowledge_revisions.py`、`migrations/`、`src/knowledge_ci/storage/question_store.py`、`src/knowledge_ci/jobs/worker.py`、`tests/integration/test_generation_pipeline.py`。
+- 目标路径：`src/knowledge_ci/storage/knowledge_store.py`、`src/knowledge_ci/knowledge/service.py`、`src/knowledge_ci/knowledge/queries.py`、`var/local-checks/tests/integration/test_knowledge_revisions.py`、`migrations/`、`src/knowledge_ci/storage/question_store.py`、`src/knowledge_ci/jobs/worker.py`、`var/local-checks/tests/integration/test_generation_pipeline.py`。
 - 第1天：增加知识/修订及最小Question迁移；草稿与open/blocking问题一并持久化，建立候选去重、修订/状态CAS。
 - 第2天：实现历史/分页/证据查询；将worker扩展为证据→模型→草稿/问题落库，保存阶段检查点并校验lease_token。
 - 第3天：验证旧版本写入冲突、生成重放、阶段失败恢复以及草稿连同阻断问题原子提交；保留已有发布指针。
@@ -337,7 +338,7 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 - 工期：3天；计划 D037～D039；里程碑 M2；对应原工作包 S10。
 - 前置：T11、T14。
 - 输入与契约：主计划/api/v1草案；绑定内容修订的Review与状态CAS。
-- 目标路径：`src/knowledge_ci/review/service.py`、`src/knowledge_ci/review/publish.py`、`src/knowledge_ci/web/api.py`、`src/knowledge_ci/app.py`、`tests/integration/test_review_publish.py`、`src/knowledge_ci/storage/models.py`、`src/knowledge_ci/storage/review_store.py`、`migrations/`。
+- 目标路径：`src/knowledge_ci/review/service.py`、`src/knowledge_ci/review/publish.py`、`src/knowledge_ci/web/api.py`、`src/knowledge_ci/app.py`、`var/local-checks/tests/integration/test_review_publish.py`、`src/knowledge_ci/storage/models.py`、`src/knowledge_ci/storage/review_store.py`、`migrations/`。
 - 第1天：增加Review/AuditEvent迁移与存储，实现审核/发布原子事务；检查负责人、证据及T14已持久化的阻断问题。
 - 第2天：接入仓库、任务、排名、知识查询、修订、审核与发布HTTP路由；复用已有服务。
 - 第3天：验证409/422/404、双页面冲突审批、未经批准发布及修改后重新审核；本机监听和服务端actor从此启用。
@@ -351,7 +352,7 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 - 工期：2天；计划 D040～D041；里程碑 M2；对应原工作包 S11。
 - 前置：T15。
 - 输入与契约：T15已有仓库/任务/模块API与读取服务；模板展示，不新增分析规则。
-- 目标路径：`src/knowledge_ci/web/pages.py`、`src/knowledge_ci/web/templates/repositories.html`、`src/knowledge_ci/web/templates/jobs.html`、`src/knowledge_ci/web/templates/modules.html`、`tests/e2e/test_analysis_pages.py`。
+- 目标路径：`src/knowledge_ci/web/pages.py`、`src/knowledge_ci/web/templates/repositories.html`、`src/knowledge_ci/web/templates/jobs.html`、`src/knowledge_ci/web/templates/modules.html`、`var/local-checks/tests/e2e/test_analysis_pages.py`。
 - 第1天：增加仓库选择、启动分析、阶段轮询；页面表单采用同源/CSRF防护和服务端actor。
 - 第2天：增加Top-K信号与候选入口；处理空、加载、partial/unknown、无效ref和失败状态。
 - 验收/合入：能从页面启动并查看分析；失败可理解；模块信号与CLI同源；篡改路径/身份不会扩大授权。
@@ -364,7 +365,7 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 - 工期：3天；计划 D042～D044；里程碑 M2；对应原工作包 S11。
 - 前置：T16。
 - 输入与契约：T14/T15知识查询、修订、审核、发布服务；同一份schema与错误码。
-- 目标路径：`src/knowledge_ci/web/templates/knowledge_list.html`、`src/knowledge_ci/web/templates/knowledge_detail.html`、`src/knowledge_ci/web/templates/review.html`、`tests/e2e/test_knowledge_pages.py`。
+- 目标路径：`src/knowledge_ci/web/templates/knowledge_list.html`、`src/knowledge_ci/web/templates/knowledge_detail.html`、`src/knowledge_ci/web/templates/review.html`、`var/local-checks/tests/e2e/test_knowledge_pages.py`。
 - 第1天：实现候选/正式知识列表与详情、证据、来源快照和失效条件展示。
 - 第2天：实现编辑、差异核对、批准、驳回、发布操作；明确当前草稿与已发布修订。
 - 第3天：补空/冲突/非法发布状态；通过固定假响应从选仓库到发布贯通一条知识。
@@ -378,7 +379,7 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 - 工期：3天；计划 D045～D047；里程碑 M3；对应原工作包 S12。
 - 前置：T13、T15、T17。
 - 输入与契约：Question open/answered/resolved/cancelled；blocking变化递增聚合state_version。
-- 目标路径：`src/knowledge_ci/knowledge/questions.py`、`src/knowledge_ci/web/templates/questions.html`、`src/knowledge_ci/storage/question_store.py`、`tests/e2e/test_question_workflow.py`、`migrations/`。
+- 目标路径：`src/knowledge_ci/knowledge/questions.py`、`src/knowledge_ci/web/templates/questions.html`、`src/knowledge_ci/storage/question_store.py`、`var/local-checks/tests/e2e/test_question_workflow.py`、`migrations/`。
 - 第1天：扩展T14已有的最小Question存储，实现分配、列表、回答API与回答者记录；按需新增回答字段/记录迁移。
 - 第2天：把人工回答转成可追溯Evidence，触发重新评估及新修订；保留原问题/回答。
 - 第3天：贯通页面和至少3类不足证据场景；检验回答不足、重复提交及阻断发布。
@@ -392,7 +393,7 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 - 工期：3天；计划 D048～D050；里程碑 M3；对应原工作包 S13。
 - 前置：T11、T12、T18。
 - 输入与契约：T11已有基本幂等、检查点和租约提交；本任务扩展恢复路径。
-- 目标路径：`src/knowledge_ci/jobs/recovery.py`、`src/knowledge_ci/jobs/service.py`、`src/knowledge_ci/jobs/worker.py`、`tests/integration/test_job_recovery.py`。
+- 目标路径：`src/knowledge_ci/jobs/recovery.py`、`src/knowledge_ci/jobs/service.py`、`src/knowledge_ci/jobs/worker.py`、`var/local-checks/tests/integration/test_job_recovery.py`。
 - 第1天：实现心跳过期检测、重启接管、分阶段恢复和人工重试，区分永久/暂时失败。
 - 第2天：实现取消与token失效；校验超时旧响应无法覆盖新attempt产物。
 - 第3天：执行杀worker、断点恢复、重复请求、重试后旧响应、取消后旧响应的故障矩阵。
@@ -406,7 +407,7 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 - 工期：2天；计划 D051～D052；里程碑 M3；对应原工作包 S13。
 - 前置：T16、T17、T18、T19。
 - 输入与契约：T05/T12/T15/T16已分别落实路径、模型、本机、表单基础边界。
-- 目标路径：`src/knowledge_ci/web/security.py`、`src/knowledge_ci/web/errors.py`、`src/knowledge_ci/web/templates/error.html`、`tests/integration/test_local_boundaries.py`。
+- 目标路径：`src/knowledge_ci/web/security.py`、`src/knowledge_ci/web/errors.py`、`src/knowledge_ci/web/templates/error.html`、`var/local-checks/tests/integration/test_local_boundaries.py`。
 - 第1天：统一页面与API的错误码、request_id、字段错误、冲突刷新与失败恢复说明。
 - 第2天：验证越界路径、伪造actor、跨源状态操作、缺失证据和敏感日志；修复局部缺口。
 - 验收/合入：关键异常都有可操作反馈；凭据不进代码/日志/证据；入口不能绕过领域服务。
@@ -420,7 +421,7 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 - 工期：2天；计划 D053～D054；里程碑 M3；对应原工作包 S14。
 - 前置：T12、T18、T19、T20。
 - 输入与契约：主计划第9.3节指标口径；T12已记录实际/估算成本与预算占用。
-- 目标路径：`src/knowledge_ci/knowledge/metrics.py`、`src/knowledge_ci/web/templates/metrics.html`、`src/knowledge_ci/cli.py`、`tests/integration/test_metrics_report.py`。
+- 目标路径：`src/knowledge_ci/knowledge/metrics.py`、`src/knowledge_ci/web/templates/metrics.html`、`src/knowledge_ci/cli.py`、`var/local-checks/tests/integration/test_metrics_report.py`。
 - 第1天：聚合候选分母、确认/驳回/未审数、追问状态、阶段耗时、失败及模型调用成本。
 - 第2天：提供简单页面与JSON/表格导出，验证零分母、未知费用、重试调用和快照过滤。
 - 验收/合入：报告数字可回查明细；未审候选不隐藏；无有效知识时成本指标不是0；超预算原因可见。
@@ -433,7 +434,7 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 - 工期：2天；计划 D055～D056；里程碑 M3；对应原工作包 S14。
 - 前置：T04、T18、T21。
 - 输入与契约：数据库和证据产物共同构成备份；本地运行数据受var清理规则约束。
-- 目标路径：`src/knowledge_ci/storage/backup.py`、`src/knowledge_ci/cli.py`、`tests/integration/test_backup_restore.py`、`docs/decisions/0002-data-lifecycle.md`。
+- 目标路径：`src/knowledge_ci/storage/backup.py`、`src/knowledge_ci/cli.py`、`var/local-checks/tests/integration/test_backup_restore.py`、`docs/decisions/0002-data-lifecycle.md`。
 - 第1天：定义一致备份/恢复方法、清单和内容哈希；明确停写或快照策略、缓存与正式数据区别。
 - 第2天：在隔离测试目录恢复完整样例，核对知识、修订、审核、审计和证据可访问；记录操作。
 - 验收/合入：A11通过；恢复不会写坏现有数据；清理策略保留被正式知识引用的证据。
@@ -446,7 +447,7 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 - 工期：3天；计划 D057～D059；里程碑 M4；对应原工作包 S15。
 - 前置：T17、T18、T19、T20、T21、T22。
 - 输入与契约：真实仓库授权、模型可用、知情者可参与；候选和私有原文仅保留本地运行区。
-- 目标路径：`tests/fixtures/pilot_manifest.json`、`docs/decisions/0003-pilot-evaluation.md`、`TASK_PLAN.md`。
+- 目标路径：`var/local-checks/tests/fixtures/pilot_manifest.json`、`docs/decisions/0003-pilot-evaluation.md`、`TASK_PLAN.md`。
 - 第1天：记录commit、配置、规模和基线，运行试点，核对解析缺口和预算。
 - 第2天：逐条审核候选与追问，记录去重后的有效知识、拒绝理由和证据完整率。
 - 第3天：汇总A01–A12检查结果、成本与阻塞项，按影响建立缺陷清单。
@@ -461,7 +462,7 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 - 工期：3天；计划 D060～D062；里程碑 M4；对应原工作包 S15。
 - 前置：T23。
 - 输入与契约：T23缺陷清单与主计划A01–A12；代码修改路径按缺陷定位后在开工前补入本卡。
-- 目标路径：`TASK_PLAN.md`、`PROJECT_PLAN.md`、`tests/e2e/test_mvp_acceptance.py`、`docs/decisions/0004-mvp-acceptance.md`。
+- 目标路径：`TASK_PLAN.md`、`PROJECT_PLAN.md`、`var/local-checks/tests/e2e/test_mvp_acceptance.py`、`docs/decisions/0004-mvp-acceptance.md`。
 - 第1天：只选累计不超过本卡容量的验收阻断缺陷，写清文件与验证；修复最高优先项。
 - 第2天：运行受影响回归及一次完整闭环，复核数据、成本和恢复演练记录。
 - 第3天：记录发布/继续修复决定与演示说明，更新实际工时和后续估算。
@@ -478,7 +479,7 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 - 工期：2天；计划 D070～D071；里程碑 M5；对应原工作包 S16。
 - 前置：T24。
 - 输入与契约：MVP验收通过；指定base/head commit；P1目标平台在此选择一种。
-- 目标路径：`src/knowledge_ci/contracts/changes.py`、`tests/fixtures/change_cases.json`、`docs/decisions/0005-incremental-scope.md`。
+- 目标路径：`src/knowledge_ci/contracts/changes.py`、`var/local-checks/tests/fixtures/change_cases.json`、`docs/decisions/0005-incremental-scope.md`。
 - 第1天：定义ChangeSet、影响结果、Verification与风险建议模型，确认事件源和范围。
 - 第2天：建立格式、类型指令、import副作用、日志表达式、重命名、删除、分叉历史反例；定误报/漏报门槛。
 - 验收/合入：每类样例有人工预期；不确定性如何表达明确；平台接入权限和等待事项登记。
@@ -491,7 +492,7 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 - 工期：3天；计划 D072～D074；里程碑 M5；对应原工作包 S16。
 - 前置：T05、T25。
 - 输入与契约：两个固定commit及T25 ChangeSet；无效祖先关系按已定策略处理。
-- 目标路径：`src/knowledge_ci/repository/diff.py`、`tests/integration/test_commit_diff.py`。
+- 目标路径：`src/knowledge_ci/repository/diff.py`、`var/local-checks/tests/integration/test_commit_diff.py`。
 - 第1天：读取base/head差异与新增/删除/修改文件，保留两侧定位。
 - 第2天：实现重命名映射、二进制/大文件诊断和不可直接比较历史的处理。
 - 第3天：核对黄金变更样例与复现性；不依赖文件时间戳判定新鲜。
@@ -504,8 +505,8 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 
 - 工期：3天；计划 D075～D077；里程碑 M5；对应原工作包 S16。
 - 前置：T06、T25、T26。
-- 输入与契约：固定语法版本的两侧AST；T25变化分类与反例。
-- 目标路径：`src/knowledge_ci/analysis/semantic_diff.py`、`tests/unit/test_semantic_diff.py`。
+- 输入与契约：固定工具版本的Vue/JS/TS两侧AST与SFC映射；T25变化分类与反例，含去注释误伤字符串。
+- 目标路径：`src/knowledge_ci/analysis/semantic_diff.py`、`var/local-checks/tests/unit/test_semantic_diff.py`。
 - 第1天：制定允许跳过的最小等价规则与版本号，默认不确定则继续检测。
 - 第2天：比较符号、签名、控制流、异常处理与import等变化，保存判定原因。
 - 第3天：验证纯格式与副作用import、日志表达式、类型/配置指令反例。
@@ -519,7 +520,7 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 - 工期：3天；计划 D078～D080；里程碑 M5；对应原工作包 S16。
 - 前置：T07、T14、T26、T27。
 - 输入与契约：知识scope、两侧符号与import图、变更集合。
-- 目标路径：`src/knowledge_ci/analysis/impact.py`、`src/knowledge_ci/knowledge/scope_index.py`、`tests/integration/test_knowledge_impact.py`。
+- 目标路径：`src/knowledge_ci/analysis/impact.py`、`src/knowledge_ci/knowledge/scope_index.py`、`var/local-checks/tests/integration/test_knowledge_impact.py`。
 - 第1天：建立路径/符号到知识修订的索引，处理删除和改名。
 - 第2天：按有界依赖传播计算受影响候选，标明直接/间接/未知关联。
 - 第3天：验证跨模块影响、边变化、未解析依赖与边界外变更。
@@ -533,7 +534,7 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 - 工期：3天；计划 D081～D083；里程碑 M5；对应原工作包 S16。
 - 前置：T12、T25、T28。
 - 输入与契约：Verification绑定knowledge revision、目标snapshot与scope_hash。
-- 目标路径：`src/knowledge_ci/knowledge/freshness.py`、`src/knowledge_ci/storage/verification_store.py`、`tests/integration/test_freshness_check.py`、`migrations/`。
+- 目标路径：`src/knowledge_ci/knowledge/freshness.py`、`src/knowledge_ci/storage/verification_store.py`、`var/local-checks/tests/integration/test_freshness_check.py`、`migrations/`。
 - 第1天：串联版本/等价/影响规则，对可确定情况直接记录验证结果。
 - 第2天：对剩余项通过受预算约束的模型判断，保留理由、证据及unknown结果。
 - 第3天：验证跨分支、旧快照、依赖变化和证据不足；实现change-checks异步服务。
@@ -547,7 +548,7 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 - 工期：3天；计划 D084～D086；里程碑 M5；对应原工作包 S16。
 - 前置：T15、T18、T29。
 - 输入与契约：新鲜度结果、旧修订与新证据；首版只生成变更建议。
-- 目标路径：`src/knowledge_ci/knowledge/evolution.py`、`src/knowledge_ci/review/risk_policy.py`、`src/knowledge_ci/web/templates/change_review.html`、`tests/e2e/test_change_review.py`。
+- 目标路径：`src/knowledge_ci/knowledge/evolution.py`、`src/knowledge_ci/review/risk_policy.py`、`src/knowledge_ci/web/templates/change_review.html`、`var/local-checks/tests/e2e/test_change_review.py`。
 - 第1天：定义low/medium/high/unknown规则和冲突处理；生成新修订或失效建议。
 - 第2天：复用审核/追问服务并增加差异页面、证据对照与来源commit展示。
 - 第3天：验证高风险、证据冲突、删除警告和旧审批失效；评估成本。
@@ -562,7 +563,7 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 - 工期：2天；计划 D087～D088；里程碑 M5；对应原工作包 S16。
 - 前置：T14、T15、T30。
 - 输入与契约：历史修订、当前state_version；恢复也须经过审核。
-- 目标路径：`src/knowledge_ci/knowledge/restore.py`、`src/knowledge_ci/web/templates/revision_history.html`、`tests/integration/test_revision_restore.py`。
+- 目标路径：`src/knowledge_ci/knowledge/restore.py`、`src/knowledge_ci/web/templates/revision_history.html`、`var/local-checks/tests/integration/test_revision_restore.py`。
 - 第1天：增加历史内容选择与恢复命令，生成引用原修订的新草稿。
 - 第2天：验证权限边界、版本冲突、证据关联及恢复后重新审核。
 - 验收/合入：恢复不删历史、不覆盖当前发布指针；重新批准后才可发布；审计能看到恢复来源。
@@ -575,7 +576,7 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 - 工期：3天；计划 D089～D091；里程碑 M5；对应原工作包 S16。
 - 前置：T10、T25。
 - 输入与契约：T25选定的一个平台；只读凭据及允许仓库；PR/MR、Issue与commit关联契约。
-- 目标路径：`src/knowledge_ci/integrations/git_provider.py`、`src/knowledge_ci/evidence/remote_sources.py`、`tests/integration/test_git_provider.py`。
+- 目标路径：`src/knowledge_ci/integrations/git_provider.py`、`src/knowledge_ci/evidence/remote_sources.py`、`var/local-checks/tests/integration/test_git_provider.py`。
 - 第1天：定义provider接口和脱敏固定响应，确认平台API能力、权限与版本。
 - 第2天：实现所选平台的PR/MR与Issue元数据/讨论读取、分页、限流及commit关联。
 - 第3天：验证删除/不可访问/限流、缓存和凭据脱敏，将来源转为Evidence。
@@ -590,7 +591,7 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 - 工期：3天；计划 D092～D094；里程碑 M5；对应原工作包 S16。
 - 前置：T19、T29、T30、T32。
 - 输入与契约：同一选定平台的一个事件入口；先选合并/Push中的明确事件类型。
-- 目标路径：`src/knowledge_ci/integrations/events.py`、`src/knowledge_ci/web/webhooks.py`、`tests/integration/test_incremental_events.py`。
+- 目标路径：`src/knowledge_ci/integrations/events.py`、`src/knowledge_ci/web/webhooks.py`、`var/local-checks/tests/integration/test_incremental_events.py`。
 - 第1天：验证平台事件真实性、仓库允许范围与事件schema，固定base/head。
 - 第2天：按事件ID去重，持久化再返回接收结果，转换为增量分析Job。
 - 第3天：重放重复/乱序/丢失base/失败重试事件；验证历史产物隔离与重试安全。
@@ -605,7 +606,7 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 - 工期：3天；计划 D095～D097；里程碑 M5；对应原工作包 S16。
 - 前置：T27、T28、T29、T30、T31、T32、T33。
 - 输入与契约：T25预定误报/漏报标准和完整变更样例集。
-- 目标路径：`tests/e2e/test_incremental_workflow.py`、`docs/decisions/0006-incremental-evaluation.md`、`TASK_PLAN.md`。
+- 目标路径：`var/local-checks/tests/e2e/test_incremental_workflow.py`、`docs/decisions/0006-incremental-evaluation.md`、`TASK_PLAN.md`。
 - 第1天：运行事件→Diff→影响→复核→建议→审核→新发布的闭环。
 - 第2天：核对副作用反例、删除/改名、恢复、乱序事件及权限失败，统计耗时/费用。
 - 第3天：记录阶段验收和缺陷，重估P2；达标后才进入注入阶段。
@@ -621,7 +622,7 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 - 工期：3天；计划 D101～D103；里程碑 M6；对应原工作包 S17。
 - 前置：T14、T29、T34。
 - 输入与契约：repository_id、target_commit、intent、paths、operation、budget；发布修订与Verification。
-- 目标路径：`src/knowledge_ci/contracts/context.py`、`src/knowledge_ci/knowledge/context_query.py`、`tests/integration/test_context_query.py`。
+- 目标路径：`src/knowledge_ci/contracts/context.py`、`src/knowledge_ci/knowledge/context_query.py`、`var/local-checks/tests/integration/test_context_query.py`。
 - 第1天：冻结上下文输入输出及错误语义，复用路径和仓库边界。
 - 第2天：按路径、符号、依赖、风险和发布状态检索排序，返回命中原因。
 - 第3天：验证目标版本匹配、未发布排除、跨仓库拒绝及unknown/stale降级。
@@ -635,7 +636,7 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 - 工期：2天；计划 D104～D105；里程碑 M6；对应原工作包 S17。
 - 前置：T35。
 - 输入与契约：T35候选上下文和预算；首版优先确定性摘要/去重。
-- 目标路径：`src/knowledge_ci/knowledge/context_budget.py`、`tests/unit/test_context_budget.py`。
+- 目标路径：`src/knowledge_ci/knowledge/context_budget.py`、`var/local-checks/tests/unit/test_context_budget.py`。
 - 第1天：定义预算单位、稳定截断和去重方式，优先保留约束/风险/证据引用。
 - 第2天：处理无命中、超预算和压缩失败，输出截断/降级原因并测试。
 - 验收/合入：返回满足约定预算；压缩不删除关键限定或伪造结论；调用方能判断是否被截断。
@@ -649,7 +650,7 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 - 工期：3天；计划 D106～D108；里程碑 M6；对应原工作包 S17。
 - 前置：T35、T36。
 - 输入与契约：现有context_query服务；使用实施时验证的MCP SDK和一种传输方式。
-- 目标路径：`src/knowledge_ci/integrations/mcp_server.py`、`tests/integration/test_mcp_context.py`。
+- 目标路径：`src/knowledge_ci/integrations/mcp_server.py`、`var/local-checks/tests/integration/test_mcp_context.py`。
 - 第1天：核实目标客户端/SDK兼容，暴露工具schema和服务入口。
 - 第2天：实现get_context调用、错误映射、取消/超时、日志脱敏和本机访问约束。
 - 第3天：使用测试客户端校验工具发现、调用、无命中、超预算与拒绝访问。
@@ -663,7 +664,7 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 - 工期：3天；计划 D109～D111；里程碑 M6；对应原工作包 S17。
 - 前置：T37。
 - 输入与契约：一个选定客户端和明确支持的接入方式；Hook能力需实际验证。
-- 目标路径：`docs/decisions/0007-client-integration.md`、`src/knowledge_ci/integrations/client_adapter.py`、`tests/e2e/test_client_integration.py`。
+- 目标路径：`docs/decisions/0007-client-integration.md`、`src/knowledge_ci/integrations/client_adapter.py`、`var/local-checks/tests/e2e/test_client_integration.py`。
 - 第1天：验证客户端可用接口；若缺少可靠Hook，明确采用显式工作流调用并记录限制。
 - 第2天：接入意图/路径/操作信号，显示上下文、来源、失效提示与降级原因。
 - 第3天：在受控示例验证修改前能取得上下文、失败时行为明确且无跨仓库泄露。
@@ -678,7 +679,7 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 - 工期：2天；计划 D112～D113；里程碑 M6；对应原工作包 S17。
 - 前置：T21、T38。
 - 输入与契约：context_request_id、展示的知识修订、显式采用/未采用反馈。
-- 目标路径：`src/knowledge_ci/knowledge/feedback.py`、`src/knowledge_ci/web/templates/context_feedback.html`、`tests/integration/test_context_feedback.py`、`migrations/`。
+- 目标路径：`src/knowledge_ci/knowledge/feedback.py`、`src/knowledge_ci/web/templates/context_feedback.html`、`var/local-checks/tests/integration/test_context_feedback.py`、`migrations/`。
 - 第1天：保存查询与展示记录，提供简短反馈入口及重复反馈处理。
 - 第2天：统计采用率、无命中、过期降级、延迟与预算；区分返回/展示/实际采用。
 - 验收/合入：分母和样例可回查；工具成功返回不自动计为采用；意图日志按已定隐私规则保存。
@@ -691,7 +692,7 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 - 工期：3天；计划 D114～D116；里程碑 M6；对应原工作包 S17。
 - 前置：T35、T36、T37、T38、T39。
 - 输入与契约：固定版本样例、客户端演示与实际反馈；验证现有范围，不默认扩充A2A。
-- 目标路径：`tests/e2e/test_context_workflow.py`、`docs/decisions/0008-context-evaluation.md`、`TASK_PLAN.md`、`PROJECT_PLAN.md`。
+- 目标路径：`var/local-checks/tests/e2e/test_context_workflow.py`、`docs/decisions/0008-context-evaluation.md`、`TASK_PLAN.md`、`PROJECT_PLAN.md`。
 - 第1天：跑查询→压缩→MCP→客户端→反馈，覆盖有效/未知/过期/跨仓库与超时场景。
 - 第2天：记录命中价值、延迟、成本与失败行为；确认未绕过审核和版本契约。
 - 第3天：记录是否投入多仓库、共享服务、更多语言或A2A的依据及后续独立任务。
@@ -743,11 +744,11 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 
 ## 6. 实际执行记录
 
-实际记录只追加结论与证据，不复制任务卡。当前尚未开始工程任务；本次文档细化不计作T01已经完成。
+实际记录只追加结论与证据，不复制任务卡。T01于2026-10-19完成工程和自动验证，待Recall验收；实际工作日按投入记录，不将2天估算直接算作实际用时。
 
 | 任务ID | 实际开始/结束 | 实际工作日 | 等待天数与原因 | 实际分支/提交/PR | 验证证据 | 遗留项/新任务 |
 | --- | --- | --- | --- | --- | --- | --- |
-| 待填写 | — | — | — | — | — | — |
+| T01 | 2026-10-19开始/开发验证完成，待验收 | 本次会话；人日由Recall补录 | 无业务阻塞；下载及本机临时目录权限已处理 | feat/hyw/T01，未提交 | 18项测试、Ruff、真实试点配置检查、独立wheel安装复验通过；见0001-baseline.md | 后续Vue/JS/TS解析已重排；模型供应商/预算T12前确定 |
 
 验收记录模板：
 
@@ -774,4 +775,6 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 | 日期 | 修订 | 说明 |
 | --- | --- | --- |
 | 2026-10-19 | v1 | 将17个工作包拆成40项2～3天任务，建立相对工作日、分支建议、依赖及验收对应；替换原粗估 |
+| 2026-10-19 | v2 | T01工程与验证完成待验收；选Vue3Admin/77e9634基线，目标解析调整为Vue/JS/TS；记录实际用户分支与验证证据 |
+| 2026-10-19 | v3 | 按用户要求，测试代码/样例/专用依赖配置与报告只保留本地；任务卡验证路径统一迁到Git忽略的var/local-checks/ |
 
