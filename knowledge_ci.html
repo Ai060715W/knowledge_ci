@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Knowledge CI：面向代码仓库的持续知识发现、验证、注入、治理与演进系统完整方案。" />
+  <title>Knowledge CI｜完整产品与系统设计方案</title>
+  <style>
+    :root {
+      --bg: #09101f;
+      --bg-2: #0d1427;
+      --panel: rgba(18, 28, 54, 0.82);
+      --panel-2: rgba(26, 39, 73, 0.92);
+      --text: #f5f7ff;
+      --muted: #aeb9d9;
+      --line: rgba(255,255,255,.10);
+      --primary: #86a3ff;
+      --secondary: #67e3c3;
+      --accent: #ffcd78;
+      --danger: #ff8d9c;
+      --purple: #c29cff;
+      --shadow: 0 22px 70px rgba(0,0,0,.34);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 8% 0%, rgba(134,163,255,.18), transparent 27%),
+        radial-gradient(circle at 95% 10%, rgba(103,227,195,.12), transparent 23%),
+        linear-gradient(180deg, #08101f 0%, #0b1224 50%, #09101f 100%);
+      font-family: Inter, "PingFang SC", "Microsoft YaHei", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.75;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    code, pre { font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace; }
+    .container { width: min(1220px, calc(100% - 40px)); margin: 0 auto; }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(18px);
+      background: rgba(7,12,25,.78);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .nav {
+      min-height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 850;
+      letter-spacing: .02em;
+    }
+
+    .brand-mark {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      color: #07101d;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      box-shadow: 0 10px 30px rgba(103,227,195,.20);
+      font-weight: 950;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .nav-links a:hover { color: var(--text); }
+
+    .hero {
+      padding: 96px 0 72px;
+      overflow: hidden;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.16fr .84fr;
+      gap: 48px;
+      align-items: center;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(134,163,255,.09);
+      border: 1px solid rgba(134,163,255,.30);
+      color: #cbd5ff;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: .10em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 22px 0 18px;
+      font-size: clamp(48px, 8vw, 92px);
+      line-height: 1;
+      letter-spacing: -.06em;
+    }
+
+    .gradient-text {
+      background: linear-gradient(90deg,#fff,#b6c3ff 42%,#73ead0 82%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 780px;
+      color: var(--muted);
+      font-size: 19px;
+    }
+
+    .hero-actions {
+      margin-top: 30px;
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      min-height: 46px;
+      padding: 0 18px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      font-weight: 800;
+      transition: .2s ease;
+    }
+
+    .btn.primary {
+      color: #06111e;
+      background: linear-gradient(135deg,#9db2ff,#69e6c6);
+      box-shadow: 0 14px 34px rgba(103,227,195,.18);
+    }
+
+    .btn.secondary { background: rgba(255,255,255,.04); }
+    .btn:hover { transform: translateY(-2px); }
+
+    .hero-card {
+      padding: 28px;
+      border-radius: 28px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(29,42,80,.92), rgba(14,21,41,.88));
+      box-shadow: var(--shadow);
+    }
+
+    .mini-title {
+      margin-bottom: 18px;
+      color: var(--secondary);
+      font-size: 13px;
+      font-weight: 850;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .pipeline { display: grid; gap: 12px; }
+    .step {
+      display: grid;
+      grid-template-columns: 42px 1fr;
+      gap: 14px;
+      align-items: start;
+      padding: 14px;
+      border-radius: 16px;
+      background: rgba(255,255,255,.035);
+      border: 1px solid rgba(255,255,255,.065);
+    }
+
+    .step-num {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: rgba(134,163,255,.12);
+      color: #cbd5ff;
+      font-weight: 950;
+    }
+
+    .step strong { display: block; margin-bottom: 3px; }
+    .step span { color: var(--muted); font-size: 14px; }
+
+    section { padding: 78px 0; }
+    .section-head { margin-bottom: 34px; }
+    .section-head small {
+      color: var(--secondary);
+      font-weight: 850;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    h2 {
+      margin: 8px 0 12px;
+      font-size: clamp(32px,5vw,54px);
+      line-height: 1.12;
+      letter-spacing: -.04em;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 23px;
+      line-height: 1.3;
+    }
+
+    h4 {
+      margin: 0 0 8px;
+      font-size: 17px;
+    }
+
+    .section-head p,
+    .muted { color: var(--muted); }
+    .section-head p { margin: 0; max-width: 860px; }
+
+    .grid-2 { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 18px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 18px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 16px; }
+
+    .card {
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      background: var(--panel);
+      padding: 26px;
+      box-shadow: 0 12px 34px rgba(0,0,0,.12);
+    }
+
+    .card p { margin: 0; color: var(--muted); }
+
+    .icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 15px;
+      display: grid;
+      place-items: center;
+      margin-bottom: 18px;
+      font-weight: 950;
+      background: linear-gradient(135deg, rgba(134,163,255,.18), rgba(103,227,195,.10));
+      border: 1px solid rgba(255,255,255,.08);
+    }
+
+    .quote {
+      margin-top: 26px;
+      padding: 24px 28px;
+      border-left: 4px solid var(--secondary);
+      border-radius: 0 18px 18px 0;
+      background: rgba(103,227,195,.06);
+      color: #dffcf5;
+      font-size: 21px;
+      font-weight: 780;
+    }
+
+    .layer-stack { display: grid; gap: 12px; }
+    .layer {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      gap: 18px;
+      align-items: center;
+      padding: 18px 20px;
+      border-radius: 18px;
+      background: rgba(255,255,255,.035);
+      border: 1px solid var(--line);
+    }
+    .layer b { color: #dfe6ff; }
+    .layer span { color: var(--muted); }
+
+    .arch-flow {
+      display: grid;
+      grid-template-columns: repeat(4,minmax(0,1fr));
+      gap: 14px;
+    }
+
+    .arch-node {
+      min-height: 210px;
+      padding: 22px;
+      border-radius: 20px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(134,163,255,.11), rgba(255,255,255,.03));
+    }
+
+    .arch-node b { display: block; font-size: 20px; margin-bottom: 10px; }
+    .arch-node span { color: var(--muted); font-size: 14px; }
+
+    .tag {
+      display: inline-block;
+      margin-bottom: 14px;
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 850;
+      letter-spacing: .10em;
+    }
+
+    ul { margin: 14px 0 0; padding-left: 20px; }
+    li + li { margin-top: 6px; }
+    .card ul { color: var(--muted); }
+
+    .formula {
+      padding: 22px;
+      border-radius: 18px;
+      background: #0a1122;
+      border: 1px solid rgba(134,163,255,.18);
+      overflow-x: auto;
+      color: #dce4ff;
+      font-size: 14px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: 20px;
+      border: 1px solid var(--line);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 850px;
+      background: rgba(255,255,255,.025);
+    }
+
+    th, td {
+      padding: 16px 18px;
+      text-align: left;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+
+    th {
+      background: rgba(134,163,255,.08);
+      color: #dfe6ff;
+      font-size: 14px;
+    }
+
+    td { color: var(--muted); font-size: 14px; }
+    tr:last-child td { border-bottom: none; }
+
+    .timeline { display: grid; gap: 14px; }
+    .timeline-item {
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .dot {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: rgba(103,227,195,.12);
+      color: var(--secondary);
+      border: 1px solid rgba(103,227,195,.24);
+      font-weight: 900;
+    }
+
+    .timeline-body {
+      padding: 18px 20px;
+      border-radius: 16px;
+      background: rgba(255,255,255,.03);
+      border: 1px solid var(--line);
+    }
+
+    .code-box {
+      padding: 22px;
+      border-radius: 18px;
+      background: #080e1c;
+      border: 1px solid rgba(255,255,255,.08);
+      overflow-x: auto;
+      color: #d6defb;
+      font-size: 13px;
+      line-height: 1.7;
+      white-space: pre;
+    }
+
+    .risk.low { box-shadow: inset 0 3px 0 var(--secondary); }
+    .risk.mid { box-shadow: inset 0 3px 0 var(--accent); }
+    .risk.high { box-shadow: inset 0 3px 0 var(--danger); }
+
+    .agent-card {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .agent-card::after {
+      content: "";
+      position: absolute;
+      right: -80px;
+      bottom: -90px;
+      width: 190px;
+      height: 190px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(194,156,255,.14), transparent 68%);
+    }
+
+    .kpi {
+      text-align: center;
+      padding: 24px 18px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.03);
+    }
+
+    .kpi b {
+      display: block;
+      font-size: 34px;
+      line-height: 1;
+      margin-bottom: 10px;
+      background: linear-gradient(90deg,var(--primary),var(--secondary));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .kpi span { color: var(--muted); font-size: 14px; }
+
+    .positioning {
+      padding: 38px;
+      border-radius: 30px;
+      background:
+        linear-gradient(135deg, rgba(134,163,255,.16), rgba(103,227,195,.08)),
+        var(--panel);
+      border: 1px solid rgba(255,255,255,.12);
+      box-shadow: var(--shadow);
+    }
+
+    .positioning p {
+      margin: 0;
+      font-size: clamp(24px,3vw,36px);
+      line-height: 1.45;
+      font-weight: 850;
+    }
+
+    .positioning .sub {
+      display: block;
+      margin-top: 18px;
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--muted);
+    }
+
+    details {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(255,255,255,.025);
+      padding: 0 18px;
+    }
+
+    details + details { margin-top: 12px; }
+    summary {
+      cursor: pointer;
+      padding: 16px 0;
+      font-weight: 800;
+      color: #e6ebff;
+    }
+    details p, details ul { color: var(--muted); }
+
+    footer {
+      padding: 34px 0 50px;
+      color: #8d99ba;
+      border-top: 1px solid var(--line);
+      font-size: 14px;
+    }
+
+    @media (max-width: 980px) {
+      .hero-grid,
+      .grid-2,
+      .grid-3,
+      .grid-4,
+      .arch-flow {
+        grid-template-columns: 1fr;
+      }
+      .nav-links { display: none; }
+      .layer { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 560px) {
+      .container { width: min(100% - 24px,1220px); }
+      .hero { padding-top: 64px; }
+      .hero-card,.card,.positioning { padding: 20px; }
+      section { padding: 58px 0; }
+      h1 { font-size: 50px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="container nav">
+      <a class="brand" href="#top">
+        <span class="brand-mark">K</span>
+        <span>Knowledge CI</span>
+      </a>
+      <nav class="nav-links">
+        <a href="#why">问题</a>
+        <a href="#overview">总览</a>
+        <a href="#discovery">隐藏知识</a>
+        <a href="#freshness">新鲜度</a>
+        <a href="#injection">知识注入</a>
+        <a href="#evolution">增量演进</a>
+        <a href="#architecture">架构</a>
+        <a href="#roadmap">落地</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="container hero-grid">
+        <div>
+          <span class="eyebrow">AST × Git History × LLM × Human-in-the-loop</span>
+          <h1><span class="gradient-text">Knowledge CI</span></h1>
+          <p>
+            面向代码仓库的持续知识发现、证据验证、主动注入、风险治理与增量演进系统。
+            它不是把文档放进向量库，而是让软件知识拥有和代码一样的生命周期。
+          </p>
+          <div class="hero-actions">
+            <a class="btn primary" href="#overview">阅读完整方案</a>
+            <a class="btn secondary" href="#architecture">查看系统架构</a>
+          </div>
+        </div>
+
+        <aside class="hero-card">
+          <div class="mini-title">Knowledge Lifecycle</div>
+          <div class="pipeline">
+            <div class="step">
+              <div class="step-num">01</div>
+              <div><strong>发现</strong><span>从依赖图、代码异常结构与演进历史中定位隐藏知识。</span></div>
+            </div>
+            <div class="step">
+              <div class="step-num">02</div>
+              <div><strong>验证</strong><span>建立代码、Commit、MR、事故与人工回答组成的证据链。</span></div>
+            </div>
+            <div class="step">
+              <div class="step-num">03</div>
+              <div><strong>沉淀</strong><span>生成结构化知识单元，记录范围、版本、证据和可信度。</span></div>
+            </div>
+            <div class="step">
+              <div class="step-num">04</div>
+              <div><strong>注入</strong><span>在 Agent 或开发者修改代码前返回约束、风险和上下文。</span></div>
+            </div>
+            <div class="step">
+              <div class="step-num">05</div>
+              <div><strong>演进</strong><span>代码变化后判断知识影响，按风险自动更新或人工审核。</span></div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="why">
+      <div class="container">
+        <div class="section-head">
+          <small>Why It Exists</small>
+          <h2>为什么需要这套系统</h2>
+          <p>软件系统真正重要的知识，通常不是“这段代码做了什么”，而是“为什么必须这样做、哪些东西不能破坏、当初发生过什么”。</p>
+        </div>
+
+        <div class="grid-2">
+          <article class="card">
+            <div class="icon">01</div>
+            <h3>隐藏知识无法被传统知识库发现</h3>
+            <p>传统知识库只能管理已经被写出来的内容，但大量业务约束、架构妥协、历史兼容逻辑和事故经验只存在于代码与开发者脑中。</p>
+          </article>
+          <article class="card">
+            <div class="icon">02</div>
+            <h3>知识会和代码逐渐分离</h3>
+            <p>文档不会自动知道代码变了。随着版本演进，知识描述和真实实现出现偏差，最终让开发者基于错误上下文做决策。</p>
+          </article>
+          <article class="card">
+            <div class="icon">03</div>
+            <h3>开发者不知道自己缺少什么</h3>
+            <p>开发者修改陌生模块时，往往不知道该搜索哪个关键词，也不知道这个模块曾经出现过哪些事故与特殊约束。</p>
+          </article>
+          <article class="card">
+            <div class="icon">04</div>
+            <h3>AI 编码只看当前代码仍然不够</h3>
+            <p>Agent 可以理解代码结构，却无法天然知道某个“难看实现”是历史包袱、外部协议约束，还是一次线上事故后的保护逻辑。</p>
+          </article>
+        </div>
+
+        <div class="quote">
+          Knowledge CI 要解决的不是“文档少”，而是“软件知识无法持续被发现、验证、使用和演进”。
+        </div>
+      </div>
+    </section>
+
+    <section id="overview">
+      <div class="container">
+        <div class="section-head">
+          <small>System Overview</small>
+          <h2>系统目标与总体闭环</h2>
+          <p>像代码 CI 一样，知识也需要被检测、评估、审核、版本化和持续维护。</p>
+        </div>
+
+        <div class="arch-flow">
+          <div class="arch-node">
+            <span class="tag">DISCOVERY</span>
+            <b>隐藏知识洞察</b>
+            <span>从高频修改、高依赖度模块和异常代码结构中发现潜在知识。</span>
+          </div>
+          <div class="arch-node">
+            <span class="tag">FRESHNESS</span>
+            <b>知识新鲜度判断</b>
+            <span>用时间、AST Diff 和 LLM 判断知识是否仍然与代码一致。</span>
+          </div>
+          <div class="arch-node">
+            <span class="tag">INJECTION</span>
+            <b>开发前知识注入</b>
+            <span>根据修改路径和需求，在编码行为发生前主动注入知识与风险。</span>
+          </div>
+          <div class="arch-node">
+            <span class="tag">EVOLUTION</span>
+            <b>增量知识演进</b>
+            <span>在 MR、Push、发布和事故修复后，增量更新相关知识。</span>
+          </div>
+        </div>
+
+        <div style="margin-top:24px" class="layer-stack">
+          <div class="layer">
+            <b>事实层</b>
+            <span>源码、AST、依赖图、Git Diff、Commit、MR、Issue、事故记录、测试与运行时信息。</span>
+          </div>
+          <div class="layer">
+            <b>推理层</b>
+            <span>模块价值评估、异常结构识别、证据聚合、知识影响判断、风险分级与追问生成。</span>
+          </div>
+          <div class="layer">
+            <b>知识层</b>
+            <span>结构化知识单元、版本、适用范围、关联代码、证据链、置信度、负责人和审核状态。</span>
+          </div>
+          <div class="layer">
+            <b>交互层</b>
+            <span>平台审核、MCP、IDE/Agent 注入、MR Bot、知识变更通知和人工确认。</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="discovery">
+      <div class="container">
+        <div class="section-head">
+          <small>01 · Hidden Knowledge Discovery</small>
+          <h2>隐藏知识洞察</h2>
+          <p>目标不是检测 Code Smell 本身，而是把“长期存在、影响广泛、反复修改的异常结构”视为潜在设计知识入口。</p>
+        </div>
+
+        <div class="grid-2">
+          <article class="card">
+            <h3>第一步：全仓依赖分析</h3>
+            <p>对整个仓库执行 AST 分析，构建文件、类、函数、模块之间的依赖图，并结合 Git 历史计算模块价值。</p>
+            <ul>
+              <li>调用依赖、继承关系、数据流和导入关系</li>
+              <li>模块入度、出度、中心性和跨层依赖</li>
+              <li>修改频率、回滚次数、冲突次数、贡献者数量</li>
+              <li>事故修复、热点路径和历史高风险区域</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <h3>Top-K 模块价值评分</h3>
+            <p>不对全仓进行同等强度的昂贵分析，而是先选出最可能承载关键知识的模块。</p>
+            <div class="formula" style="margin-top:16px">
+ModuleScore =
+  α × ChangeFrequency
++ β × DependencyCentrality
++ γ × IncidentHistory
++ δ × RollbackCount
++ ε × ContributorEntropy
++ ζ × CrossLayerImpact
+            </div>
+          </article>
+        </div>
+
+        <div style="margin-top:18px" class="grid-3">
+          <article class="card">
+            <h3>代码结构信号</h3>
+            <ul>
+              <li>魔法数字与硬编码阈值</li>
+              <li>全局单例与特殊生命周期</li>
+              <li>循环依赖与跨层调用</li>
+              <li>桥接模块与兼容层</li>
+              <li>超长函数与超长类</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>行为异常信号</h3>
+            <ul>
+              <li>长期绕过抽象层</li>
+              <li>重复但不能合并的分支</li>
+              <li>异常吞噬与特殊降级</li>
+              <li>特殊缓存和状态同步</li>
+              <li>看似冗余却反复保留的逻辑</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>历史证据信号</h3>
+            <ul>
+              <li>同一区域频繁修复</li>
+              <li>重构后又被恢复</li>
+              <li>多次回滚</li>
+              <li>MR 中存在长讨论</li>
+              <li>事故后新增保护逻辑</li>
+            </ul>
+          </article>
+        </div>
+
+        <div style="margin-top:28px" class="section-head">
+          <small>Evidence Chain</small>
+          <h3>从“异常代码”到“可信知识”</h3>
+        </div>
+
+        <div class="timeline">
+          <div class="timeline-item">
+            <div class="dot">1</div>
+            <div class="timeline-body">
+              <h4>发现候选知识点</h4>
+              <p class="muted">系统发现某个高依赖模块中存在全局单例、特殊锁顺序或长期保留的兼容分支。</p>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="dot">2</div>
+            <div class="timeline-body">
+              <h4>回溯 Git 演进</h4>
+              <p class="muted">分析该结构的引入 Commit、后续修改、回滚、MR 讨论、Issue 和事故记录。</p>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="dot">3</div>
+            <div class="timeline-body">
+              <h4>评估证据充分度</h4>
+              <p class="muted">区分“代码看起来特殊”与“代码和历史共同证明存在设计约束”。</p>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="dot">4</div>
+            <div class="timeline-body">
+              <h4>证据不足则生成追问</h4>
+              <p class="muted">把问题分配给最可能知情的负责人，等待人工补充，再生成正式知识单元。</p>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:28px" class="grid-2">
+          <article class="card">
+            <h3>典型追问</h3>
+            <ul>
+              <li>为什么这里必须使用全局单例？</li>
+              <li>这个数值来自业务规则、协议还是经验阈值？</li>
+              <li>该桥接层是否用于兼容历史版本？</li>
+              <li>为什么重构时仍然保留这段分支？</li>
+              <li>删除它会影响哪些历史场景？</li>
+              <li>这里是否发生过线上事故或数据错误？</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <h3>知识单元生成原则</h3>
+            <ul>
+              <li>不把模型猜测直接写成事实</li>
+              <li>明确区分事实、推断和人工结论</li>
+              <li>保存知识产生时对应的代码版本</li>
+              <li>每条结论必须能回溯证据</li>
+              <li>记录适用范围和失效条件</li>
+              <li>允许后续版本化与审核</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="knowledge-unit">
+      <div class="container">
+        <div class="section-head">
+          <small>Knowledge Unit</small>
+          <h2>知识单元的数据结构</h2>
+          <p>知识必须是结构化、可追踪、可版本化、可判断新鲜度的，而不是一段失去上下文的自然语言摘要。</p>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>字段</th>
+                <th>作用</th>
+                <th>示例</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>title</td>
+                <td>知识单元标题</td>
+                <td>订单状态机禁止跨级跳转</td>
+              </tr>
+              <tr>
+                <td>summary</td>
+                <td>可快速注入的简明结论</td>
+                <td>PAID 不能直接进入 REFUNDED，必须经过 REFUNDING</td>
+              </tr>
+              <tr>
+                <td>rationale</td>
+                <td>为什么这样设计</td>
+                <td>避免支付网关异步回调导致重复退款</td>
+              </tr>
+              <tr>
+                <td>scope</td>
+                <td>适用模块、文件、类、函数</td>
+                <td>order-service / RefundStateMachine</td>
+              </tr>
+              <tr>
+                <td>evidence</td>
+                <td>代码、Commit、MR、Issue、事故证据</td>
+                <td>commit a13f... / incident INC-2025-07</td>
+              </tr>
+              <tr>
+                <td>confidence</td>
+                <td>可信度与证据充分度</td>
+                <td>0.93 / 人工确认</td>
+              </tr>
+              <tr>
+                <td>valid_from_version</td>
+                <td>知识开始生效的代码版本</td>
+                <td>v3.8.0</td>
+              </tr>
+              <tr>
+                <td>last_verified_at</td>
+                <td>最后一次确认仍然有效的时间</td>
+                <td>2026-07-21</td>
+              </tr>
+              <tr>
+                <td>risk_level</td>
+                <td>修改相关代码时的风险级别</td>
+                <td>high</td>
+              </tr>
+              <tr>
+                <td>owner / reviewer</td>
+                <td>负责人和审核人</td>
+                <td>支付平台组 / 架构负责人</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="margin-top:24px" class="code-box">{
+  "title": "退款状态必须经过 REFUNDING",
+  "summary": "PAID 状态不能直接跳转为 REFUNDED。",
+  "rationale": "支付网关回调是异步且可能重复，直接跳转会破坏幂等和账务核对。",
+  "scope": {
+    "module": "order-service",
+    "symbols": ["RefundStateMachine", "PaymentCallbackHandler"]
+  },
+  "evidence": [
+    {"type": "commit", "id": "a13f9c2"},
+    {"type": "incident", "id": "INC-2025-07"},
+    {"type": "human_answer", "reviewer": "payment-platform-owner"}
+  ],
+  "confidence": 0.93,
+  "risk_level": "high",
+  "last_verified_at": "2026-07-21",
+  "status": "active"
+}</div>
+      </div>
+    </section>
+
+    <section id="freshness">
+      <div class="container">
+        <div class="section-head">
+          <small>02 · Knowledge Freshness</small>
+          <h2>知识新鲜度判断</h2>
+          <p>不能只看文件时间戳，也不能每次代码变化都交给大模型。需要构建一条分层、低成本、可解释的判断链路。</p>
+        </div>
+
+        <div class="grid-4">
+          <div class="kpi"><b>1</b><span>时间初筛</span></div>
+          <div class="kpi"><b>2</b><span>AST 语义过滤</span></div>
+          <div class="kpi"><b>3</b><span>依赖影响分析</span></div>
+          <div class="kpi"><b>4</b><span>LLM 最终判断</span></div>
+        </div>
+
+        <div style="margin-top:24px" class="grid-2">
+          <article class="card">
+            <h3>第一层：时间比较</h3>
+            <p>如果知识最后确认时间晚于关联代码最后修改时间，通常可视为仍然新鲜；反之进入待检测队列。</p>
+          </article>
+          <article class="card">
+            <h3>第二层：AST 语义过滤</h3>
+            <p>排除注释、格式化、Import 排序、无引用变量重命名、局部日志修改等无语义变更。</p>
+          </article>
+          <article class="card">
+            <h3>第三层：影响范围分析</h3>
+            <p>判断修改是否触及知识关联的符号、控制流、调用关系、状态机、依赖边或对外行为。</p>
+          </article>
+          <article class="card">
+            <h3>第四层：LLM 判断</h3>
+            <p>结合原知识、原证据、AST Diff、Git Diff 和 MR 描述，判断知识有效、部分失效、完全失效或产生新知识。</p>
+          </article>
+        </div>
+
+        <div style="margin-top:24px" class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>变更类型</th>
+                <th>是否进入 LLM</th>
+                <th>原因</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>注释与格式化</td>
+                <td>否</td>
+                <td>不影响语义</td>
+              </tr>
+              <tr>
+                <td>未引用变量重命名</td>
+                <td>通常否</td>
+                <td>无行为影响</td>
+              </tr>
+              <tr>
+                <td>函数签名变化</td>
+                <td>是</td>
+                <td>可能影响调用方与知识适用范围</td>
+              </tr>
+              <tr>
+                <td>控制流变化</td>
+                <td>是</td>
+                <td>可能改变业务规则</td>
+              </tr>
+              <tr>
+                <td>依赖图变化</td>
+                <td>是</td>
+                <td>可能扩大或缩小影响范围</td>
+              </tr>
+              <tr>
+                <td>异常处理变化</td>
+                <td>是</td>
+                <td>可能破坏历史保护逻辑</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="margin-top:24px" class="code-box">时间比较
+  ↓
+AST Diff：是否存在语义变化？
+  ├─ 否 → 保持知识有效
+  └─ 是
+      ↓
+依赖分析：是否触及知识范围？
+  ├─ 否 → 更新验证时间
+  └─ 是
+      ↓
+LLM 影响判断
+  ├─ 仍然有效
+  ├─ 局部更新
+  ├─ 完全失效
+  ├─ 产生新知识
+  └─ 证据不足 → 人工确认</div>
+      </div>
+    </section>
+
+    <section id="injection">
+      <div class="container">
+        <div class="section-head">
+          <small>03 · Knowledge Injection</small>
+          <h2>开发前知识注入</h2>
+          <p>知识不能只在平台里等待搜索，而应在开发行为发生之前，主动进入 Agent 和开发者的决策上下文。</p>
+        </div>
+
+        <div class="grid-2">
+          <article class="card">
+            <h3>输入信号</h3>
+            <ul>
+              <li>用户自然语言需求</li>
+              <li>即将读取或修改的文件路径</li>
+              <li>计划调用的工具与操作</li>
+              <li>相关模块依赖图</li>
+              <li>历史知识单元和风险标签</li>
+              <li>关联需求、Issue、测试与事故</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>注入内容</h3>
+            <ul>
+              <li>模块设计背景与核心职责</li>
+              <li>不可破坏的业务规则</li>
+              <li>历史事故与踩坑记录</li>
+              <li>上下游影响范围</li>
+              <li>高风险依赖模块</li>
+              <li>建议补充或重点运行的测试</li>
+            </ul>
+          </article>
+        </div>
+
+        <div style="margin-top:24px" class="timeline">
+          <div class="timeline-item">
+            <div class="dot">1</div>
+            <div class="timeline-body">
+              <h4>Agent 准备操作</h4>
+              <p class="muted">例如准备修改 order-service/refund/state_machine.ts。</p>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="dot">2</div>
+            <div class="timeline-body">
+              <h4>PreToolUse / MCP 拦截</h4>
+              <p class="muted">平台识别本次操作路径、用户需求和可能受影响模块。</p>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="dot">3</div>
+            <div class="timeline-body">
+              <h4>检索并压缩上下文</h4>
+              <p class="muted">返回最相关的知识、风险、历史事故和验证建议，而不是把整个知识库塞给 Agent。</p>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="dot">4</div>
+            <div class="timeline-body">
+              <h4>继续执行修改</h4>
+              <p class="muted">Agent 在理解历史原因和约束后再生成代码或执行工具。</p>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:24px" class="code-box">knowledge_ci.get_context({
+  intent: "调整退款状态机，允许手工退款",
+  paths: [
+    "order-service/refund/state_machine.ts",
+    "order-service/payment/callback_handler.ts"
+  ],
+  operation: "edit"
+})
+
+返回：
+- 退款状态必须经过 REFUNDING
+- 支付网关回调可能重复，必须保持幂等
+- 修改会影响账务核对与补偿任务
+- 高风险模块：payment-callback / reconciliation
+- 建议测试：重复回调、延迟回调、部分退款、人工退款并发</div>
+      </div>
+    </section>
+
+    <section id="evolution">
+      <div class="container">
+        <div class="section-head">
+          <small>04 · Incremental Evolution</small>
+          <h2>知识增量演进</h2>
+          <p>知识不应定期全量重建，而应在代码生命周期关键节点被增量检查、更新和审核。</p>
+        </div>
+
+        <div class="grid-3">
+          <article class="card">
+            <h3>触发节点</h3>
+            <ul>
+              <li>Git Push</li>
+              <li>MR 创建与更新</li>
+              <li>MR 合并</li>
+              <li>发布前检查</li>
+              <li>事故修复后</li>
+              <li>架构变更后</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>分析内容</h3>
+            <ul>
+              <li>修改了哪些模块</li>
+              <li>影响哪些依赖与知识</li>
+              <li>是否改变业务规则</li>
+              <li>是否产生新设计决策</li>
+              <li>是否让原知识过期</li>
+              <li>是否需要新的风险提示</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>输出结果</h3>
+            <ul>
+              <li>保持知识有效</li>
+              <li>自动更新知识</li>
+              <li>生成知识变更建议</li>
+              <li>创建人工审核任务</li>
+              <li>生成新的追问</li>
+              <li>标记知识失效</li>
+            </ul>
+          </article>
+        </div>
+
+        <div style="margin-top:26px" class="grid-3">
+          <article class="card risk low">
+            <h3>低风险：自动融入</h3>
+            <p>措辞补充、路径变化、明确证据支持的小范围更新，可自动合并并保留审计记录。</p>
+          </article>
+          <article class="card risk mid">
+            <h3>中风险：人工确认</h3>
+            <p>模块职责变化、影响范围扩展、部分结论失效，需要相关负责人确认。</p>
+          </article>
+          <article class="card risk high">
+            <h3>高风险：强制审核</h3>
+            <p>推翻架构结论、修改核心规则、删除风险警告、证据冲突或跨模块重大影响，必须审核。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="agents">
+      <div class="container">
+        <div class="section-head">
+          <small>Agent Collaboration</small>
+          <h2>Agent 与 A2A 协作设计</h2>
+          <p>复杂流程不应由一个 Agent 同时完成发现、生成、评估和审核，而应拆成职责明确的协作单元。</p>
+        </div>
+
+        <div class="grid-3">
+          <article class="card agent-card">
+            <span class="tag">ANALYSIS AGENT</span>
+            <h3>代码分析 Agent</h3>
+            <p>负责 AST、依赖图、热点模块、异常结构和语义 Diff 分析。</p>
+          </article>
+          <article class="card agent-card">
+            <span class="tag">EVIDENCE AGENT</span>
+            <h3>证据聚合 Agent</h3>
+            <p>负责检索 Commit、MR、Issue、事故记录和历史讨论，构建证据链。</p>
+          </article>
+          <article class="card agent-card">
+            <span class="tag">KNOWLEDGE AGENT</span>
+            <h3>知识生成 Agent</h3>
+            <p>根据证据生成知识草稿、适用范围、失效条件和追问。</p>
+          </article>
+          <article class="card agent-card">
+            <span class="tag">RISK AGENT</span>
+            <h3>风险评估 Agent</h3>
+            <p>判断知识变更的影响范围、证据冲突和自动融入风险。</p>
+          </article>
+          <article class="card agent-card">
+            <span class="tag">REVIEW AGENT</span>
+            <h3>审核辅助 Agent</h3>
+            <p>为人工审核生成差异摘要、证据说明和推荐处理意见。</p>
+          </article>
+          <article class="card agent-card">
+            <span class="tag">INJECTION AGENT</span>
+            <h3>知识注入 Agent</h3>
+            <p>根据当前需求和修改路径选择最相关、最小充分的上下文。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="architecture">
+      <div class="container">
+        <div class="section-head">
+          <small>Reference Architecture</small>
+          <h2>参考系统架构</h2>
+          <p>从代码采集、静态分析、证据聚合到知识服务与开发流程集成，形成可持续运行的平台能力。</p>
+        </div>
+
+        <div class="layer-stack">
+          <div class="layer">
+            <b>接入层</b>
+            <span>GitHub / GitLab / Gitea、Webhooks、MR Bot、IDE 插件、MCP Server、Agent Hooks。</span>
+          </div>
+          <div class="layer">
+            <b>分析层</b>
+            <span>语言解析器、AST 服务、依赖图服务、Git Diff 服务、热点模块分析、语义变更检测。</span>
+          </div>
+          <div class="layer">
+            <b>证据层</b>
+            <span>Commit、MR、Issue、评论、事故记录、测试结果、运行日志、人工回答与负责人映射。</span>
+          </div>
+          <div class="layer">
+            <b>智能层</b>
+            <span>知识候选生成、证据充分度评估、追问生成、知识影响判断、风险分级和上下文压缩。</span>
+          </div>
+          <div class="layer">
+            <b>存储层</b>
+            <span>关系数据库、对象存储、图数据库、向量索引、版本与审核记录、知识状态机。</span>
+          </div>
+          <div class="layer">
+            <b>应用层</b>
+            <span>知识平台、审核工作台、模块风险视图、知识图谱、MCP、MR 评论与通知系统。</span>
+          </div>
+        </div>
+
+        <div style="margin-top:24px" class="grid-2">
+          <article class="card">
+            <h3>推荐存储划分</h3>
+            <ul>
+              <li>PostgreSQL：知识单元、版本、审核、追问、负责人</li>
+              <li>Graph DB：模块、符号、依赖和影响关系</li>
+              <li>Object Storage：AST 快照、Diff、证据原文</li>
+              <li>Vector Index：知识、Commit、MR 与问题语义检索</li>
+              <li>Cache：热点知识与开发前注入结果</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>关键工程要求</h3>
+            <ul>
+              <li>所有结论可追溯到证据</li>
+              <li>所有自动更新可回滚</li>
+              <li>支持多语言仓库与增量解析</li>
+              <li>模型调用必须分层控成本</li>
+              <li>人机交互必须进入状态机</li>
+              <li>注入上下文需要最小充分原则</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="metrics">
+      <div class="container">
+        <div class="section-head">
+          <small>Observability</small>
+          <h2>可观测性与核心指标</h2>
+          <p>Knowledge CI 不是一个“生成了多少文档”的系统，而应衡量知识是否被发现、验证、使用和持续保持有效。</p>
+        </div>
+
+        <div class="grid-4">
+          <div class="kpi"><b>覆盖率</b><span>高价值模块中已有有效知识的比例</span></div>
+          <div class="kpi"><b>新鲜度</b><span>知识与当前代码版本保持一致的比例</span></div>
+          <div class="kpi"><b>命中率</b><span>开发前注入知识被实际采用的比例</span></div>
+          <div class="kpi"><b>确认率</b><span>AI 候选知识被人工确认的比例</span></div>
+        </div>
+
+        <div style="margin-top:18px" class="grid-3">
+          <article class="card">
+            <h3>发现质量</h3>
+            <ul>
+              <li>候选知识精确率</li>
+              <li>有效追问率</li>
+              <li>人工补充率</li>
+              <li>高价值模块覆盖率</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>演进质量</h3>
+            <ul>
+              <li>过期知识发现时延</li>
+              <li>误报率与漏报率</li>
+              <li>自动更新回滚率</li>
+              <li>审核平均处理时长</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>使用价值</h3>
+            <ul>
+              <li>MCP 注入命中率</li>
+              <li>风险提示采纳率</li>
+              <li>重复事故下降比例</li>
+              <li>陌生模块理解时间下降比例</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="roadmap">
+      <div class="container">
+        <div class="section-head">
+          <small>Implementation Roadmap</small>
+          <h2>分阶段落地路线</h2>
+          <p>先建立可信的分析与知识闭环，再扩展到主动注入和多 Agent 协作，避免一开始就做成庞大而不可控的平台。</p>
+        </div>
+
+        <div class="grid-3">
+          <article class="card">
+            <span class="tag">PHASE 1</span>
+            <h3>知识发现 MVP</h3>
+            <ul>
+              <li>单语言 AST 分析</li>
+              <li>依赖图与 Top-K 模块</li>
+              <li>Git Log 证据聚合</li>
+              <li>候选知识与追问</li>
+              <li>基础审核平台</li>
+            </ul>
+          </article>
+          <article class="card">
+            <span class="tag">PHASE 2</span>
+            <h3>新鲜度与增量演进</h3>
+            <ul>
+              <li>知识—代码关联</li>
+              <li>AST Diff 语义过滤</li>
+              <li>MR / Push 触发</li>
+              <li>风险分级</li>
+              <li>知识版本与回滚</li>
+            </ul>
+          </article>
+          <article class="card">
+            <span class="tag">PHASE 3</span>
+            <h3>开发前注入与平台化</h3>
+            <ul>
+              <li>MCP Server</li>
+              <li>Agent Hook 集成</li>
+              <li>上下文压缩</li>
+              <li>A2A Agent 协作</li>
+              <li>多仓库知识治理</li>
+            </ul>
+          </article>
+        </div>
+
+        <div style="margin-top:24px">
+          <details open>
+            <summary>最适合优先验证的 MVP 场景</summary>
+            <p>选择一个历史较长、改动频繁、事故记录较多、核心开发者仍在团队中的仓库。先验证系统能否发现 10～30 条真正有价值的隐藏知识，而不是追求全仓覆盖。</p>
+          </details>
+          <details>
+            <summary>第一阶段不应该做什么</summary>
+            <ul>
+              <li>不要一开始支持所有语言和所有代码结构</li>
+              <li>不要直接自动写入正式知识库</li>
+              <li>不要把普通代码摘要当作知识</li>
+              <li>不要完全依赖向量检索代替符号与依赖分析</li>
+              <li>不要把所有代码变化都交给 LLM</li>
+            </ul>
+          </details>
+          <details>
+            <summary>最核心的产品壁垒</summary>
+            <p>不是某个单独的 AST 规则，也不是一个更好的代码问答模型，而是知识发现、证据验证、人机追问、开发前注入、增量演进与风险治理组成的完整闭环。</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section id="positioning">
+      <div class="container">
+        <div class="positioning">
+          <p>
+            Knowledge CI 不是普通 Wiki，不是单纯代码 RAG，也不是自动生成文档的工具。
+            <span class="sub">
+              它管理的是：代码为什么这样设计、这些结论现在是否仍然成立、修改时必须知道什么，以及代码变化后知识如何继续演进。
+            </span>
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      Knowledge CI · Continuous Discovery, Verification, Injection, Governance and Evolution of Software Knowledge.
+    </div>
+  </footer>
+
+  <script>
+    const links = [...document.querySelectorAll('.nav-links a')];
+    const sections = links.map(link => document.querySelector(link.getAttribute('href'))).filter(Boolean);
+
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        links.forEach(link => {
+          link.style.color =
+            link.getAttribute('href') === '#' + entry.target.id
+              ? 'var(--text)'
+              : 'var(--muted)';
+        });
+      });
+    }, { rootMargin: '-35% 0px -55% 0px' });
+
+    sections.forEach(section => observer.observe(section));
+  </script>
+</body>
+</html>
