@@ -11,7 +11,7 @@ from pydantic import ValidationError
 
 from knowledge_ci import __version__
 from knowledge_ci.app import create_app
-from knowledge_ci.config import Settings, verify_pilot
+from knowledge_ci.config import Settings, load_settings, verify_pilot
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -32,13 +32,18 @@ def main(argv: Sequence[str] | None = None) -> int:
         parser.print_help()
         return 0
 
+    env_file = args.env_file if args.env_file is not None else ".env"
+    env_file_path = Path(env_file)
+    env_file_loaded = env_file_path.is_file()
+
     try:
-        if args.env_file is not None and not Path(args.env_file).is_file():
+        if args.env_file is not None and not env_file_loaded:
             raise ValueError("Requested configuration file is missing or not a regular file")
-        settings = Settings(_env_file=args.env_file if args.env_file is not None else ".env")
+        settings = load_settings(env_file)
         if args.command == "check-config":
             result: dict[str, object] = {
                 "status": "ok",
+                "env_file_loaded": env_file_loaded,
                 "pilot_configured": settings.pilot_configured,
                 "model_provider": settings.model_provider,
                 "source_egress": settings.allow_source_egress,
@@ -50,7 +55,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             return 0
     except ValidationError as exc:
         errors = [
-            f"{'.'.join(map(str, item['loc']))}: {item['msg']}"
+            (f"{'.'.join(map(str, item['loc']))}: " if item["loc"] else "") + item["msg"]
             for item in exc.errors(include_input=False, include_url=False)
         ]
         print("Configuration error: " + "; ".join(errors), file=sys.stderr)
