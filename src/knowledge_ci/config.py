@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     pilot_owner: str | None = Field(default=None, min_length=1)
     model_provider: Literal["mock"] = "mock"
     allow_source_egress: bool = False
-    model_budget_usd: Decimal = Field(default=Decimal("0"), ge=0)
+    model_budget_usd: Decimal = Field(default=Decimal(0), ge=0)
 
     @field_validator(
         "pilot_repository",
