@@ -2,7 +2,7 @@
 
 - 日期：2026-10-19。
 - 状态：T01工程实现与自动验证完成，待Recall验收合入。
-- 工作分支：feat/hyw/T01（用户已创建，当前继续使用）。
+- 初始工作分支：feat/hyw/T01；2026-10-20本轮复审修复位于用户指定的fix/hyw/1020。
 - 用户已确认：Recall单人开发；Python实现；试点为Ai060715W/Vue3Admin；允许后续接入外部模型，供应商和预算待定。
 
 ## 问题与最直接路径
@@ -83,10 +83,21 @@
 
 本机沙箱默认临时目录权限不足，首次pytest在准备目录时失败，未进入断言；使用项目内隔离目录并以必要本机权限复跑通过。这是验证环境限制，代码没有绕过权限检查。
 
-上述为T01首次完成的历史验证；测试代码现迁入Git忽略的var/local-checks/，测试工具不再写入业务pyproject/uv.lock。本地验证说明留在该目录；独立安装复验步骤为：uv export --locked --all-groups --no-emit-project导出带哈希清单，uv venv建立空环境，uv pip sync --require-hashes安装清单，再uv pip install --no-deps安装构建wheel，最后从该解释器运行测试。临时目录均限定在var/tmp。
+上述为T01首次完成的历史验证；测试代码曾迁入Git忽略的var/local-checks/。现行规则以AGENTS.md为准：测试材料仅临时放在var/tmp/local-checks/，验证后删除，不长期保留；测试工具不写入业务pyproject/uv.lock。独立安装复验步骤为：uv export --locked --all-groups --no-emit-project导出带哈希清单，uv venv建立空环境，uv pip sync --require-hashes安装清单，再uv pip install --no-deps安装构建wheel，最后从该解释器运行临时测试。临时目录均限定在var/tmp，验证后清理。
 
 T01实际消耗记录为本次AI协作会话，未把2天估算写成已投入2个人日；Recall可在任务记录补充实际人日。未自动提交、推送或切换分支，原HTML和试点源码未修改。
 
 ## 用户追加的仓库边界
 
 2026-10-19用户明确要求测试等验证材料不进入仓库。已将原tests迁入var/local-checks/tests/，从业务pyproject移除测试工具依赖及pytest/Ruff配置，并更新Git忽略和后续任务路径。原有18项通过记录保留为历史证据；应用业务逻辑与已选试点保持不变。
+
+## 2026-10-20复审修复
+
+- 原因：Git for Windows输出UTF-8路径，Python 3.12当前系统默认编码为cp936；原text=True在中文路径下会解码失败并抛出未处理异常。
+- 选择及架构影响：两个Git子进程均捕获bytes，在主线程分别按UTF-8解码路径、按ASCII解码commit；stderr保持bytes。解码失败转为不含原始输出的配置错误，CLI返回2。保持现有接口和只读边界，不新增依赖。
+- 规范修复：移除CLAUDE.md两组冲突标记，目录与清理规则统一为AGENTS.md约定的var/tmp/local-checks/，同步移除长期本地保留测试的表述。
+- 环境：Windows、Python 3.12.14、UTF-8 mode=0、locale cp936；使用现有隔离环境及缓存的Ruff 0.17.1。
+- 临时回归命令：`.\.venv\Scripts\python.exe var/tmp/local-checks/tests/test_git_encoding.py`；12项通过，涵盖真实ASCII与中文带空格Git根目录、缺失/无效配置、固定commit不存在或不一致、无效UTF-8路径输出、无效ASCII commit输出、不可解码stderr、Git失败和超时；异常均不回显合成敏感值或traceback。
+- 真实试点命令：`.\.venv\Scripts\knowledge-ci.exe check-config --require-pilot`；通过，主基线77e9634保持不变。
+- 代码检查：Ruff `check --isolated --no-cache src/knowledge_ci/config.py`与`format --isolated --no-cache --check src/knowledge_ci/config.py`、`git diff --check`通过；全仓已无合并冲突标记。
+- 临时测试脚本、合成Git仓库及产物验证后删除；本轮修复完成，T01仍待Recall验收，实际人日待补录。

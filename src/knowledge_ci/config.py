@@ -27,10 +27,14 @@ class Settings(BaseSettings):
     pilot_owner: str | None = Field(default=None, min_length=1)
     model_provider: Literal["mock"] = "mock"
     allow_source_egress: bool = False
-    model_budget_usd: Decimal = Field(default=Decimal("0"), ge=0)
+    model_budget_usd: Decimal = Field(default=Decimal(0), ge=0)
 
     @field_validator(
-        "pilot_repository", "pilot_commit", "pilot_language", "pilot_owner", mode="before"
+        "pilot_repository",
+        "pilot_commit",
+        "pilot_language",
+        "pilot_owner",
+        mode="before",
     )
     @classmethod
     def normalize_optional_fields(cls, value: object) -> object:
@@ -61,7 +65,10 @@ class Settings(BaseSettings):
 def load_settings(env_file: Path | str | None = ".env") -> Settings:
     """Load settings and anchor relative pilot_repository to the configuration file directory."""
     settings = Settings(_env_file=env_file)
-    if settings.pilot_repository is not None and not settings.pilot_repository.is_absolute():
+    if (
+        settings.pilot_repository is not None
+        and not settings.pilot_repository.is_absolute()
+    ):
         if env_file is None or env_file == ".env":
             anchor = Path.cwd()
         else:
@@ -97,11 +104,10 @@ def verify_pilot(settings: Settings) -> dict[str, str]:
         root = subprocess.run(
             [git, "-C", str(repository), "rev-parse", "--show-toplevel"],
             capture_output=True,
-            text=True,
             check=True,
             timeout=10,
         )
-        if Path(root.stdout.strip()).resolve() != repository:
+        if Path(root.stdout.decode("utf-8").strip()).resolve() != repository:
             raise ValueError("Pilot repository must point to the Git worktree root")
         result = subprocess.run(
             [
@@ -113,15 +119,18 @@ def verify_pilot(settings: Settings) -> dict[str, str]:
                 f"{settings.pilot_commit}^{{commit}}",
             ],
             capture_output=True,
-            text=True,
             check=True,
             timeout=10,
         )
+        commit = result.stdout.decode("ascii").strip()
+    except UnicodeDecodeError as exc:
+        raise ValueError(
+            "Git returned repository metadata with an invalid encoding"
+        ) from exc
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as exc:
         raise ValueError(
             "Pilot path is not a Git repository containing the configured commit"
         ) from exc
-    commit = result.stdout.strip()
     if commit != settings.pilot_commit:
         raise ValueError("Resolved pilot commit differs from the configured commit")
     return {
