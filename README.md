@@ -9,12 +9,6 @@
 - Git 需在 PATH 中。后续 Vue/TS 解析任务会引入独立 Node 解析辅助工具，T01 不安装目标项目依赖。
 - 以下命令均在项目根目录执行。
 
-本机本次已经初始化环境，尚未安装系统级uv命令；可先使用项目缓存工具 `& .\var\cache\uv-bootstrap\bin\uv.exe` 替代下文的 `uv`。例如：
-
-~~~powershell
-& .\var\cache\uv-bootstrap\bin\uv.exe run --locked knowledge-ci --version
-~~~
-
 ~~~powershell
 uv sync --locked
 if (-not (Test-Path .env)) { Copy-Item .env.example .env }
@@ -38,12 +32,14 @@ uv run --locked knowledge-ci serve
 
 配置前缀为 KNOWLEDGE_CI_，读取根目录 .env，环境变量优先于文件。.env 被 Git 忽略，不能提交凭据；命令行可用 --env-file 指定其他文件。
 
+相对路径的 `PILOT_REPOSITORY` 以配置文件所在目录为基准。默认 `.env` 的基准是当前工作目录；用 `--env-file` 指定其他文件时，相对路径以该文件所在目录为基准。
+
 | 变量 | 默认值 | 作用 |
 | --- | --- | --- |
 | KNOWLEDGE_CI_HOST | 127.0.0.1 | 只接受本机监听地址 |
 | KNOWLEDGE_CI_PORT | 8000 | 监听端口，范围1～65535 |
 | KNOWLEDGE_CI_LOG_LEVEL | info | 服务日志级别 |
-| KNOWLEDGE_CI_PILOT_REPOSITORY | 空 | 本地Git仓库路径 |
+| KNOWLEDGE_CI_PILOT_REPOSITORY | 空 | 本地Git仓库路径，支持相对路径 |
 | KNOWLEDGE_CI_PILOT_COMMIT | 空 | 完整40位小写commit SHA，不使用移动分支作为基线 |
 | KNOWLEDGE_CI_PILOT_LANGUAGE | 空 | 目标源码语言标识；当前试点为vue-typescript |
 | KNOWLEDGE_CI_PILOT_OWNER | 空 | 试点知情者，当前为Recall |
@@ -59,7 +55,9 @@ uv run --locked knowledge-ci check-config --require-pilot
 
 缺少试点、commit不在本地仓库、无效端口或不支持的配置均返回退出码2，错误不回显输入值。--help 与 --version 返回0。默认.env可省略；显式--env-file指定的文件不存在时返回2，不静默回退到默认配置。
 
-当前本机 .env 已配置用户指定仓库的只读克隆（无工作区检出）与固定commit。其他设备需要自行准备克隆并填写本机路径：
+`check-config` 输出包含 `env_file_loaded` 字段：true 表示读取了配置文件，false 表示配置文件不存在或未使用，全部使用默认值和环境变量。
+
+本地 `.env` 需指向试点仓库的只读克隆。克隆命令示例：
 
 ~~~powershell
 git clone --no-checkout https://github.com/Ai060715W/Vue3Admin.git var/cache/repositories/vue3-admin
@@ -78,7 +76,7 @@ KNOWLEDGE_CI_PILOT_OWNER=Recall
 
 ## 本地验收
 
-仓库仅保留业务源码、必要运行/打包配置和项目文档。测试代码、样例、验证工具配置和报告只放本地忽略目录 var/local-checks/，不进入Git或安装包；业务依赖不包含pytest、Ruff等验证工具。
+测试代码、样例、验证工具配置和报告仅在本地临时执行，验证后删除，不进入Git或安装包。
 
 ~~~powershell
 uv run --locked knowledge-ci --version
@@ -86,7 +84,7 @@ uv run --locked knowledge-ci check-config --require-pilot
 uv run --locked knowledge-ci serve
 ~~~
 
-启动后检查 /healthz，并按Ctrl+C确认退出。需要自动化回归时使用本地验证环境，说明见本地 var/local-checks/README.md。历史验证结果保留在基线决策中。
+启动后检查 /healthz，并按Ctrl+C确认退出。历史验证结果保留在基线决策 docs/decisions/0001-baseline.md 中。
 
 ## 当前试点与范围
 
