@@ -1,10 +1,10 @@
 # Knowledge CI 逐步任务计划书
 
-- 更新日期：2026-10-19。
+- 更新日期：2026-10-20。
 - 当前负责人：Recall；系统实现语言：Python；分支创建和合并由 Recall 管理。
 - 本文件负责逐任务排期、状态、实际用时与验收记录；[主计划](D:/knowledge_ci/PROJECT_PLAN.md)负责需求范围、架构、数据契约和阶段验收基线。
 - 共 40 项任务，每项 2～3 个工作日，平均 2.65 天。优先执行 P0 的 24 项任务；P1/P2 是后续预备队列。
-- T01工程与自动验证完成，待验收，使用用户创建的feat/hyw/T01分支；其余状态以总表为准。卡片末尾分支名仍是建议，目标文件按实施进度创建。
+- T01工程与自动验证完成，待验收；本轮复审修复位于用户指定的fix/hyw/1020分支，其余状态以总表为准。卡片末尾分支名仍是建议，目标文件按实施进度创建。
 
 ## 1. 排期怎么使用
 
@@ -141,7 +141,7 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 - 工期：2天；计划 D001～D002；里程碑 M0；对应原工作包 S01。
 - 前置：无。
 - 输入与契约：用户已确认单人/Python、Vue3Admin试点及后续允许外部模型；主基线77e9634，供应商和预算待定。
-- 目标路径：`AGENTS.md`、`CLAUDE.md`、`pyproject.toml`、`uv.lock`、`.python-version`、`.gitignore`、`.env.example`、`README.md`、`src/knowledge_ci/{__init__,__main__,app,cli,config}.py`、`var/local-checks/tests/conftest.py`、`var/local-checks/tests/unit/test_config.py`、`var/local-checks/tests/integration/test_app.py`、`docs/decisions/0001-baseline.md`。
+- 目标路径：`AGENTS.md`、`CLAUDE.md`、`pyproject.toml`、`uv.lock`、`.python-version`、`.gitignore`、`.env.example`、`README.md`、`src/knowledge_ci/{__init__,__main__,app,cli,config}.py`、`var/tmp/local-checks/tests/`（临时验证后删除）、`docs/decisions/0001-baseline.md`。
 - 第1天：将规范的当前阶段切换为工程实现并补齐拟创建目录的约定；选定试点commit/目标语言/知情者、依赖组合、预算和运行边界，记录决定。
 - 第2天：建立可重复安装的最小工程、空应用/CLI、配置加载及验证命令；验证启动、退出和配置缺失提示。
 - 验收/合入：另一套干净环境按记录可安装并启动；真实试点路径/commit、模型数据政策与待处理外部依赖均有记录。
@@ -749,6 +749,7 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 | 任务ID | 实际开始/结束 | 实际工作日 | 等待天数与原因 | 实际分支/提交/PR | 验证证据 | 遗留项/新任务 |
 | --- | --- | --- | --- | --- | --- | --- |
 | T01 | 2026-10-19开始/2026-10-20完成 | 本次会话；人日由Recall补录 | 无业务阻塞；下载及本机临时目录权限已处理 | feat/hyw/T01 (419b71d～6117a83)，bug/fix/1020 (16ad54b后) | 2026-10-19：18项测试、Ruff、真实试点配置检查、独立wheel安装复验通过；见0001-baseline.md。2026-10-20：干净worktree复验、相对路径锚定修复、空loc错误前缀修复、文档更新、新增3项测试后21 passed | 后续Vue/JS/TS解析已重排；模型供应商/预算T12前确定 |
+| T01（本轮复审修复） | 2026-10-20开始/结束 | 本次会话；人日待Recall补录 | 无 | fix/hyw/1020；981d376、772bee7（本轮未自动提交） | Git输出显式解码、错误脱敏、CLAUDE.md冲突及目录规则修复；12项临时回归、真实试点校验、Ruff及差异检查通过，详情见0001-baseline.md | 两项审查问题已修复；临时材料已清理，待Recall验收 |
 
 验收记录模板：
 
@@ -778,4 +779,5 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 | 2026-10-19 | v2 | T01工程与验证完成待验收；选Vue3Admin/77e9634基线，目标解析调整为Vue/JS/TS；记录实际用户分支与验证证据 |
 | 2026-10-19 | v3 | 按用户要求，测试代码/样例/专用依赖配置与报告只保留本地；任务卡验证路径统一迁到Git忽略的var/local-checks/ |
 | 2026-10-20 | v4 | T01小问题修复完成：相对路径锚定、空loc错误前缀、测试用完即删规则、文档更新；T06建议分支名改为vue-ts-symbols |
+| 2026-10-20 | v5 | 修复Windows中文仓库路径解码和CLAUDE.md合并冲突；记录12项临时回归及真实试点校验结果，T01保持待验收 |
 

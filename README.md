@@ -34,6 +34,8 @@ uv run --locked knowledge-ci serve
 
 相对路径的 `PILOT_REPOSITORY` 以配置文件所在目录为基准。默认 `.env` 的基准是当前工作目录；用 `--env-file` 指定其他文件时，相对路径以该文件所在目录为基准。
 
+Git 路径输出按 UTF-8 解码，支持 Windows 中文及带空格的仓库路径；无法解码的仓库元数据返回退出码2，不回显原始输出。
+
 | 变量 | 默认值 | 作用 |
 | --- | --- | --- |
 | KNOWLEDGE_CI_HOST | 127.0.0.1 | 只接受本机监听地址 |
@@ -85,6 +87,8 @@ uv run --locked knowledge-ci serve
 ~~~
 
 启动后检查 /healthz，并按Ctrl+C确认退出。历史验证结果保留在基线决策 docs/decisions/0001-baseline.md 中。
+
+2026-10-20复审修复：Windows / Python 3.12.14 下12项临时回归检查通过，覆盖中文路径、异常编码和错误脱敏；真实试点校验通过。临时脚本、合成仓库及运行产物验证后删除，具体命令与结果见基线决策。
 
 ## 当前试点与范围
 
