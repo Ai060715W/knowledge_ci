@@ -15,7 +15,7 @@
 - 后续新增目录前，先在本文件中定义其用途、内容分类、命名规范和清理策略，再创建目录。
 - 文档使用有明确含义的英文文件名；Python 包、模块使用 snake_case，其他业务目录优先使用 kebab-case。
 - 临时输出不得混入源码；确需保留的生成产物必须先约定目录与清理方式。
-- 用户要求仓库只保留业务应用源码、必要运行/打包配置及已有项目文档。测试代码、测试样例、测试专用依赖/配置、覆盖率/验证报告和缓存不得进入Git；不在pyproject.toml或业务uv.lock维护测试工具。测试仅按需在本地进行。
+- 测试仅按需临时执行；临时测试代码、样例、测试专用配置、报告和运行产物必须在本次验证结束后删除，不得以 Git 忽略代替清理。测试材料不得入库或打包，测试工具不得加入业务依赖。
 
 ### 后续工程目录预案
 
@@ -25,7 +25,7 @@
 | --- | --- | --- |
 | `src/knowledge_ci/` | Python 应用包；按 `contracts`、`repository`、`analysis`、`evidence`、`knowledge`、`review`、`jobs`、`storage`、`web`、`integrations` 分模块；入口 `cli.py`、`app.py` | 源码长期保留；模块命名 snake_case，不放生成数据 |
 | `src/knowledge_ci/web/templates/`、`src/knowledge_ci/web/static/` | 服务端模板及静态资源；模板和资源按所属功能命名 | 保留源文件；不提交缓存与构建产物 |
-| `var/local-checks/`（仅本地，Git忽略） | `tests/`按`unit`、`integration`、`e2e`、`fixtures`分类；`pytest.ini`、`README.md`记录本地验证方式；`reports/`按需存报告 | 不入库、不打包；样例只用合成/脱敏数据，临时运行数据用后清理；长期本地用例按需保留 |
+| `var/tmp/local-checks/`（仅验证期间存在） | 按需临时放置测试代码、合成或脱敏样例、测试专用配置和报告；测试文件使用 `test_*.py` | 本次验证结束后删除整个目录；不得入库、打包或长期保留 |
 | `migrations/` | 数据库迁移，使用迁移工具生成的有序版本名 | 已应用迁移不可随意改写或删除 |
 | `docs/decisions/` | 工程启动后记录决策；文件名 `NNNN-kebab-case.md` | 长期保留；替代旧决策须保留关联记录 |
 | `tools/parser/`（T06按需创建） | Vue SFC/JS/TS静态解析辅助工具；`index.mjs`、`package.json`、`package-lock.json`；仅接收源码数据并输出JSON | 工具源码/锁文件入库；`node_modules`与缓存忽略，不执行目标仓库代码 |
@@ -34,7 +34,7 @@
 ### T01 结构与运行约定
 
 - `src/` 只放应用源包；`src/knowledge_ci/` 当前仅创建 `__init__.py`、`__main__.py`、`app.py`、`cli.py`、`config.py`，不预建业务目录。
-- 业务源码目录不放测试。现有T01测试迁到`var/local-checks/tests/unit/`与`var/local-checks/tests/integration/`，共享夹具为本地`tests/conftest.py`；这些文件及本地pytest.ini均不入库。验证工具通过临时环境按需提供，不纳入业务依赖。
+- 业务源码目录不放测试。T01测试临时放`var/tmp/local-checks/tests/`，验证后删除；测试专用工具通过临时环境按需提供，不纳入业务依赖或uv.lock。
 - `docs/decisions/` 当前创建 `0001-baseline.md`，记录已落地技术决定、验证环境与未确定的试点信息；不存私有源码或凭据。
 - `.venv/` 为项目隔离环境；`var/cache/uv/` 为可重建依赖缓存，`var/cache/uv-bootstrap/` 为可重建的本地依赖工具；均不入 Git。任务临时验证环境放在 `var/tmp/`，验证后清理。
 - 工具自动生成的Python `__pycache__/` 可在所属模块内出现，忽略并按需清理；Ruff/pytest缓存分别放 `var/cache/ruff/`、`var/cache/pytest/`。构建包放 `var/artifacts/packages/`，文件名由构建工具生成，可重新构建；`.venv/`和缓存内部由相应工具管理，不手改依赖文件。

@@ -15,7 +15,11 @@
 - 后续新增目录前，先在本文件中定义其用途、内容分类、命名规范和清理策略，再创建目录。
 - 文档使用有明确含义的英文文件名；Python 包、模块使用 snake_case，其他业务目录优先使用 kebab-case。
 - 临时输出不得混入源码；确需保留的生成产物必须先约定目录与清理方式。
+<<<<<<< HEAD
+- 测试仅按需临时执行；临时测试代码、样例、测试专用配置、报告和运行产物必须在本次验证结束后删除，不得以 Git 忽略代替清理。测试材料不得入库或打包，测试工具不得加入业务依赖。
+=======
 - 用户要求仓库只保留业务应用源码、必要运行/打包配置及已有项目文档。测试代码、测试样例、测试专用依赖/配置、覆盖率/验证报告和缓存不得进入Git；不在pyproject.toml或业务uv.lock维护测试工具。测试仅按需在本地进行。
+>>>>>>> main
 
 ### 后续工程目录预案
 
@@ -25,7 +29,11 @@
 | --- | --- | --- |
 | `src/knowledge_ci/` | Python 应用包；按 `contracts`、`repository`、`analysis`、`evidence`、`knowledge`、`review`、`jobs`、`storage`、`web`、`integrations` 分模块；入口 `cli.py`、`app.py` | 源码长期保留；模块命名 snake_case，不放生成数据 |
 | `src/knowledge_ci/web/templates/`、`src/knowledge_ci/web/static/` | 服务端模板及静态资源；模板和资源按所属功能命名 | 保留源文件；不提交缓存与构建产物 |
+<<<<<<< HEAD
+| `var/tmp/local-checks/`（仅验证期间存在） | 按需临时放置测试代码、合成或脱敏样例、测试专用配置和报告；测试文件使用 `test_*.py` | 本次验证结束后删除整个目录；不得入库、打包或长期保留；历史遗留的 `var/local-checks/` 同样清理 |
+=======
 | `var/local-checks/`（仅本地，Git忽略） | `tests/`按`unit`、`integration`、`e2e`、`fixtures`分类；`pytest.ini`、`README.md`记录本地验证方式；`reports/`按需存报告 | 不入库、不打包；样例只用合成/脱敏数据，临时运行数据用后清理；长期本地用例按需保留 |
+>>>>>>> main
 | `migrations/` | 数据库迁移，使用迁移工具生成的有序版本名 | 已应用迁移不可随意改写或删除 |
 | `docs/decisions/` | 工程启动后记录决策；文件名 `NNNN-kebab-case.md` | 长期保留；替代旧决策须保留关联记录 |
 | `tools/parser/`（T06按需创建） | Vue SFC/JS/TS静态解析辅助工具；`index.mjs`、`package.json`、`package-lock.json`；仅接收源码数据并输出JSON | 工具源码/锁文件入库；`node_modules`与缓存忽略，不执行目标仓库代码 |

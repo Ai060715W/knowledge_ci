@@ -58,6 +58,18 @@ class Settings(BaseSettings):
         )
 
 
+def load_settings(env_file: Path | str | None = ".env") -> Settings:
+    """Load settings and anchor relative pilot_repository to the configuration file directory."""
+    settings = Settings(_env_file=env_file)
+    if settings.pilot_repository is not None and not settings.pilot_repository.is_absolute():
+        if env_file is None or env_file == ".env":
+            anchor = Path.cwd()
+        else:
+            anchor = Path(env_file).resolve().parent
+        settings.pilot_repository = anchor / settings.pilot_repository
+    return settings
+
+
 def verify_pilot(settings: Settings) -> dict[str, str]:
     """Check a configured local Git commit without checkout or executing repository code."""
     required = {
