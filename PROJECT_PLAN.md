@@ -6,7 +6,7 @@
 - 协作规范：[AGENTS.md](D:/knowledge_ci/AGENTS.md)、[CLAUDE.md](D:/knowledge_ci/CLAUDE.md)。
 - 逐步执行与排期：[TASK_PLAN.md](D:/knowledge_ci/TASK_PLAN.md)，每项2～3个工作日。
 - 已确认：当前由 Recall 一人开发；系统实现语言使用 Python；分支管理由 Recall 安排。
-- 当前阶段：T01工程与自动验证完成、待验收；T02共享契约完成、待验收。已具备可安装Python包、配置、CLI、健康检查及共享schema/状态规则。扫描、数据库和审核业务尚未实现。
+- 当前阶段：T01工程与自动验证完成、待验收；T02共享契约完成、待验收；T03建立合成历史与知识场景复现规格，验证结果与状态见TASK_PLAN。已具备可安装Python包、配置、CLI、健康检查及共享schema/状态规则。扫描、数据库和审核业务尚未实现。
 - 更新原则：范围、契约或排期变化时先更新本计划，再调整实现；已完成项必须附验证证据。
 
 ## 1. 项目目标与现状
@@ -121,7 +121,7 @@ flowchart LR
 
 ### 4.2 计划目录
 
-以下是工程结构预案，目录规范以根目录AGENTS.md为准。用户要求测试代码、样例、专用依赖/配置与报告不入库，统一放Git忽略的var/local-checks/；源码和运行配置不依赖该目录。后续业务模块按需创建。
+以下是工程结构预案，目录规范以根目录AGENTS.md为准。测试代码、样例、专用依赖/配置与报告临时放Git忽略的var/tmp/local-checks/，验证后删除，不入库；源码和运行配置不依赖该目录。后续业务模块按需创建。
 
 ~~~text
 knowledge_ci/
@@ -146,7 +146,7 @@ knowledge_ci/
 │       └── static/
 ├── migrations/
 ├── docs/decisions/
-└── var/                           # Git忽略；运行数据、产物及local-checks本地验证
+└── var/                           # Git忽略；运行数据、产物及tmp/local-checks临时验证
 ~~~
 
 ### 4.3 模块输入、输出与禁区
@@ -178,6 +178,8 @@ T02 相对下表草案的已落地差异：
 - Evidence 去掉 source_ref：locator 按 code/commit/human_answer 判别并定位来源，content_hash 作为产物内容寻址键。
 - Knowledge 增加 repository_id、当前修订的 review_status 与时间戳；KnowledgeRevision 增加 based_on_revision、content_hash、evidence_sufficiency、model_score、created_by，invalidation_conditions 改为显式 known/unknown 结构；Claim 增加 gap；Review 绑定 content_hash；Question 增加 adopted_evidence_id、resolution_note；Verification 增加 verification_id。
 - AuditEvent、模块排名和知识详情读视图分别在 T15、T08、T14 定义，T02 不预建。
+
+T03不改变上述契约。[合成历史复现规格](docs/decisions/0009-golden-fixtures.md)定义6次线性Git提交、Vue/TS/JS符号与import边、示例Git信号/Top-K、证据及3类追问。Recall已确认只长期保留规格与预期结果，生成器和样例验证后删除；后续按规格重建语义等价场景。人工oracle不代表T06～T10或模型模块已经实现，也不计入真实试点知识数量。
 
 ### 5.1 基础对象
 
@@ -412,7 +414,7 @@ P0共24项、62天任务量，加7天机动为69工作日，按每周5天约14�
 | 真实仓库试点 | 隐藏知识价值与可用性 | 仓库知情者逐条核验；Recall 不知情时请知情者确认，不能自行猜测业务历史 |
 | 故障与恢复 | worker 中断、模型超时、写锁、产物丢失、备份 | 受控故障注入，确认无重复发布与历史丢失 |
 
-T01已验证CLI、配置和HTTP启动退出；运行命令见README。测试代码、专用工具配置与依赖保存在Git忽略的本地目录，不进入业务仓库，后续按相同规则验证。
+T01已验证CLI、配置和HTTP启动退出；运行命令见README。测试代码、专用工具配置与依赖仅在Git忽略的本地目录临时使用，验证后删除，不进入业务仓库。T03在合成历史上验证确定性与契约流程；解析/图/排名仅核对预期清单的位置、引用和算术，实际模块由T06～T10实现后验收。
 
 ### 9.2 P0 发布门槛
 
@@ -496,6 +498,7 @@ M0 确定暂定性能门槛、质量底线和硬预算；M1 根据实测记录�
 | 2026-10-19 | 拆为40项2～3天任务，新增TASK_PLAN.md；按逐项工期替换粗估，提供建议分支与验收对应 | 细分计划完成，工程未启动 |
 | 2026-10-19 | 启动T01；试点改为用户指定Vue3Admin，选77e9634基线，调整后续目标解析任务 | T01工程与验证完成，待验收 |
 | 2026-10-20 | T02落地共享契约；第5节记录与草案的差异，执行任务状态增加partial | T02完成，待验收 |
+| 2026-10-21 | T03建立合成Git/知识场景复现规格，29项临时检查通过；只保留规格与预期，测试材料已删除 | T03实现与验证完成，待验收 |
 
 测试材料按用户要求不入库；验证结论可记入任务文档。逐任务状态、实际用时和验证证据写入TASK_PLAN.md；里程碑或范围变化时同步更新本文件摘要与决策。本文不替代代码接口或数据库迁移的真实实现。
 
