@@ -1,4 +1,4 @@
-"""Local application configuration; domain contracts belong to T02."""
+"""Local application configuration; commit and language types come from the shared contracts."""
 
 import shutil
 import subprocess
@@ -8,6 +8,9 @@ from typing import Literal
 
 from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+from knowledge_ci.contracts.common import GitSha
+from knowledge_ci.contracts.repository import TargetLanguage
 
 
 class Settings(BaseSettings):
@@ -22,8 +25,8 @@ class Settings(BaseSettings):
     port: int = Field(default=8000, ge=1, le=65535)
     log_level: Literal["critical", "error", "warning", "info", "debug"] = "info"
     pilot_repository: Path | None = None
-    pilot_commit: str | None = Field(default=None, pattern=r"^[0-9a-f]{40}$")
-    pilot_language: str | None = Field(default=None, min_length=1)
+    pilot_commit: GitSha | None = None
+    pilot_language: TargetLanguage | None = None
     pilot_owner: str | None = Field(default=None, min_length=1)
     model_provider: Literal["mock"] = "mock"
     allow_source_egress: bool = False
