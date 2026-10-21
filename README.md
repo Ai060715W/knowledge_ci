@@ -80,6 +80,8 @@ KNOWLEDGE_CI_PILOT_OWNER=Recall
 
 测试代码、样例、验证工具配置和报告仅在本地临时执行，验证后删除，不进入Git或安装包。
 
+T03的合成Git历史、符号/依赖边、示例Top-K及3类知识追问约定见[复现规格](docs/decisions/0009-golden-fixtures.md)。按已确认的保留策略，生成器、JSON和合成仓库验证后删除；后续任务按规格重建等价场景。该规格不代表扫描、排名或模型生成能力已经实现。
+
 ~~~powershell
 uv run --locked knowledge-ci --version
 uv run --locked knowledge-ci check-config --require-pilot

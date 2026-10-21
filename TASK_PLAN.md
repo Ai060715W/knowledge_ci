@@ -1,10 +1,10 @@
 # Knowledge CI 逐步任务计划书
 
-- 更新日期：2026-10-20。
+- 更新日期：2026-10-21。
 - 当前负责人：Recall；系统实现语言：Python；分支创建和合并由 Recall 管理。
 - 本文件负责逐任务排期、状态、实际用时与验收记录；[主计划](D:/knowledge_ci/PROJECT_PLAN.md)负责需求范围、架构、数据契约和阶段验收基线。
 - 共 40 项任务，每项 2～3 个工作日，平均 2.65 天。优先执行 P0 的 24 项任务；P1/P2 是后续预备队列。
-- T01工程与自动验证完成，待验收；本轮复审修复位于用户指定的fix/hyw/1020分支，其余状态以总表为准。卡片末尾分支名仍是建议，目标文件按实施进度创建。
+- T01～T03实现与自动验证完成，待Recall验收；T03按用户指示在包含T02的main（5b78cc9）上完成，保留策略已确认。卡片末尾分支名仍是建议，目标文件按实施进度创建。
 
 ## 1. 排期怎么使用
 
@@ -52,9 +52,9 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 
 | 任务 | 天数 | 相对工作日 | 技术前置 | 状态 | 实际天数 |
 | --- | --- | --- | --- | --- | --- |
-| [T01 确定试点与最小 Python 工程](#t01) | 2 | D001～D002 | 无 | 待验收 | 本会话完成；人日待录 |
-| [T02 冻结共享模型与状态契约](#t02) | 3 | D003～D005 | T01 | 待验收 | 本会话完成；人日待录 |
-| [T03 建立可重复的 Git 与知识样例](#t03) | 2 | D006～D007 | T02 | 待开始 | — |
+| [T01 确定试点与最小 Python 工程](#t01) | 2 | D001～D002 | 无 | 待验收 | 1 |
+| [T02 冻结共享模型与状态契约](#t02) | 3 | D003～D005 | T01 | 待验收 | 1 |
+| [T03 建立可重复的 Git 与知识样例](#t03) | 2 | D006～D007 | T02 | 待验收 | 1 |
 | [T04 建立基础存储与迁移](#t04) | 3 | D008～D010 | T02、T03 | 待开始 | — |
 | [T05 实现只读 Git 快照访问](#t05) | 2 | D011～D012 | T03、T04 | 待开始 | — |
 | [T06 解析 Vue/JS/TS 并提取符号](#t06) | 3 | D013～D015 | T05 | 待开始 | — |
@@ -110,7 +110,7 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 - 卡片中的行为和验收已实现，并运行受影响的验证；不能只有代码提交、没有结果证据。
 - 跨模块模型沿用主计划第5节；已有字段、错误语义和状态机变更先更新契约/样例，再改调用方。
 - 新目录/子目录先依照 AGENTS.md 与 CLAUDE.md 补齐结构、命名和清理约定，再创建实现文件。
-- 任务卡中的路径均相对于D:\knowledge_ci。业务文件入库；var/local-checks/中的测试代码、样例、配置和报告仅保留本地，不入库、不打包，验证工具不写入业务依赖。开工时先校准文件落点。
+- 任务卡中的路径均相对于D:\knowledge_ci。业务文件入库；测试代码、样例、配置和报告临时放var/tmp/local-checks/，验证后删除，不入库、不打包，验证工具不写入业务依赖。旧卡片的var/local-checks/在开工时校准到现行路径。
 - 数据迁移只新增有序迁移，不随意改写已应用版本；任务卡中的 migrations/ 指该任务实际生成的版本文件，开工后记录准确名称。
 - 安全、幂等、CAS、任务租约等基础规则从首次实现相关入口时生效；后期任务负责补齐故障场景，不把基础正确性延后。
 - 在第6节填写实际用时、分支、提交或PR、验证证据与遗留项，再将总表状态改为已完成。
@@ -171,10 +171,13 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 - 工期：2天；计划 D006～D007；里程碑 M0；对应原工作包 S02。
 - 前置：T02。
 - 输入与契约：T02 schema；目标为JS/TS/Vue SFC，样例不得包含真实私有仓库内容。
-- 目标路径：`var/local-checks/tests/fixtures/repository_builder.py`、`var/local-checks/tests/fixtures/knowledge_cases.json`、`var/local-checks/tests/integration/test_fixture_repository.py`。
+- 目标路径（已校准）：`docs/decisions/0009-golden-fixtures.md`长期保留复现规格与预期结果（0002～0008已由后续任务预留）；`var/tmp/local-checks/tests/fixtures/{repository_builder.py,knowledge_cases.json}`、`var/tmp/local-checks/tests/integration/test_fixture_repository.py`及`var/tmp/local-checks/runs/`只在本次验证期间存在，结束后全部删除。
 - 第1天：编写小型 Git 历史生成器：引入约束、修复、改名、格式变化、空catch、循环import和动态import；加入字符串内注释标记、SFC块与@/*别名。
 - 第2天：列预期符号/边、Top-K信号、证据、知识与追问输出；保存夹具生成和清理方式。
 - 验收/合入：每次生成得到等价历史与预期结果；测试工作目录在运行结束清理；样例可供所有后续模块共用。
+- 保留方式（2026-10-21由Recall确认）：仅保留复现规格与预期结果，后续按共同场景编号重建等价样例。生成器、JSON及Git对象不长期保存；本轮比较全部commit/tree/blob一致，不承诺仅凭文档恢复相同SHA。解析/图/排名尚未实现，其人工oracle不算业务模块验收。
+- 实施基线：main 5b78cc9已含T02；T01/T02仍待验收，按本次明确指示继续，未修改其验收状态。无分支创建、提交或推送。
+- 实施记录：2026-10-21完成6次线性合成历史与11文件场景，最终29项临时检查通过（137.273秒）；独立审查修正频次/Top-K、知识适用版本及目录prefix边界。仅保留规格与预期；生成器、JSON、测试和Git对象已删除，详见第6节。
 - 建议分支：`codex/t03-golden-fixtures`。
 
 <a id="t04"></a>
@@ -752,6 +755,16 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 | T01 | 2026-10-19开始/2026-10-20完成 | 本次会话；人日由Recall补录 | 无业务阻塞；下载及本机临时目录权限已处理 | feat/hyw/T01 (419b71d～6117a83)，bug/fix/1020 (16ad54b后) | 2026-10-19：18项测试、Ruff、真实试点配置检查、独立wheel安装复验通过；见0001-baseline.md。2026-10-20：干净worktree复验、相对路径锚定修复、空loc错误前缀修复、文档更新、新增3项测试后21 passed | 后续Vue/JS/TS解析已重排；模型供应商/预算T12前确定 |
 | T01（本轮复审修复） | 2026-10-20开始/结束 | 本次会话；人日待Recall补录 | 无 | fix/hyw/1020；981d376、772bee7（本轮未自动提交） | Git输出显式解码、错误脱敏、CLAUDE.md冲突及目录规则修复；12项临时回归、真实试点校验、Ruff及差异检查通过，详情见0001-baseline.md | 两项审查问题已修复；临时材料已清理，待Recall验收 |
 | T02 | 2026-10-20开始/结束 | 本次会话；人日待Recall补录 | 无；T01待验收但已合入main，按用户安排在其上开工 | feat/hyw/T02（基于4d5ea0a，未提交） | Windows、Python 3.12.14、pydantic 2.14.1：`uv run --offline --locked --with pytest==9.1.1`临时测试134 passed（基础类型、模型不变量、知识/追问/Job转换、CAS、伪造/跨快照引用、迟到租约、幂等冲突、错误不回显、contracts依赖边界、CLI回归）；wheel+带哈希锁定依赖的独立环境同样134 passed且导入来自site-packages；Ruff check/format、`git diff --check`、`check-config --require-pilot`通过；wheel 16个文件含contracts、不含测试；临时材料已删除 | 存储层ID生成、事务内CAS与AuditEvent归T04/T14/T15；HTTP异常映射归T15/T20 |
+| T03 | 2026-10-21开始/结束 | 本次会话；人日待Recall补录；最终验证137.273秒 | 无业务等待；tempfile的Windows ACL问题已通过继承ACL的普通mkdir解决，失败空目录已清理 | main，基于5b78cc9；未提交/无PR | Windows、Python 3.12.14、pydantic 2.14.1、Git 2.55.0.windows.3、uv 0.13.1；标准库unittest最终29 passed，命令与覆盖见下；6个commit/tree及全部blob双生成完全一致；uv锁检查、差异检查通过；整个var/tmp/local-checks/已删除 | 待Recall验收；后续按0009规格重建语义等价样例，AST/图/排名/采集实现仍归T06～T10；未创建真实junction，reparse拒绝防护仅代码审查 |
+
+### T03 验证证据
+
+- 运行命令（本次历史记录；脚本已按约定删除，需先按规格重建才能再次运行）：`.\.venv\Scripts\python.exe -m unittest discover -s var/tmp/local-checks/tests/integration -v`，最终 `Ran 29 tests in 137.273s / OK`。使用标准库unittest，未增加测试依赖或改锁文件。
+- 历史：6次提交、11文件、两名合成作者；中文/空格路径与冲突Git环境下commit/tree/blob一致；纯改名R100、格式变化仅空白、作者/时间/提交主题、逐文件频次/贡献者及旧路径失效核验通过。默认快照为`4961b1060b74d3e308043a99fd96f8eb1a18d8d3`；全部指纹见[复现规格](docs/decisions/0009-golden-fixtures.md)。
+- 预期输出：9个代表性符号原文件位置、两类SFC行映射、10条import语义记录（含external/unknown）、单个双模块循环、字符串/注释误报排除、11文件Git信号及Top-3示例算术校验通过；这些属于人工oracle验证，不是尚未实现的解析器/图/排名器结果。
+- 契约：Snapshot与AnalysisRun配置身份分离；整blob/原始commit内容哈希、缺失及跨快照引用、未来commit不属于历史、人工确认须引用回答、批准须匹配当前hash；阈值原因/空catch/循环三类问题的open→answered（仍阻断）→resolved→新修订→重新审核→发布，以及回答不足重开/取消/旧修订问题继续阻断，均通过。代码事实与原因推断使用独立Claim。
+- 清理：成功、消费方异常及生成中途失败均清理运行仓库；已有目录、越界cleanup和越界prefix拒绝；最终核对runs为空、目标绝对路径及无reparse point后删除整个local-checks，确认无测试材料入库。首次tempfile空目录的清理通过本机权限检查后完成；未改变项目或系统ACL。
+- 其他命令：`.\var\cache\uv-bootstrap\bin\uv.exe lock --check --offline --cache-dir var/cache/uv`（17包锁定检查通过）；`git diff --check`通过；业务src、pyproject.toml、uv.lock、原HTML无差异，打包仍使用既有白名单排除var。未执行真实仓库代码或外部模型调用。
 
 验收记录模板：
 
@@ -783,4 +796,5 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 | 2026-10-20 | v4 | T01小问题修复完成：相对路径锚定、空loc错误前缀、测试用完即删规则、文档更新；T06建议分支名改为vue-ts-symbols |
 | 2026-10-20 | v5 | 修复Windows中文仓库路径解码和CLAUDE.md合并冲突；记录12项临时回归及真实试点校验结果，T01保持待验收 |
 | 2026-10-20 | v6 | T02共享契约完成待验收；校准T02目标路径（新增common、evidence模块，测试改用var/tmp/local-checks临时目录） |
+| 2026-10-21 | v7 | T03复现规格与29项临时验证完成待验收；按Recall选择只留规格/预期，删除所有样例与测试；避免后续决策编号冲突，使用0009 |
 
