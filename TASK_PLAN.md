@@ -53,7 +53,7 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 | 任务 | 天数 | 相对工作日 | 技术前置 | 状态 | 实际天数 |
 | --- | --- | --- | --- | --- | --- |
 | [T01 确定试点与最小 Python 工程](#t01) | 2 | D001～D002 | 无 | 待验收 | 本会话完成；人日待录 |
-| [T02 冻结共享模型与状态契约](#t02) | 3 | D003～D005 | T01 | 待开始 | — |
+| [T02 冻结共享模型与状态契约](#t02) | 3 | D003～D005 | T01 | 待验收 | 本会话完成；人日待录 |
 | [T03 建立可重复的 Git 与知识样例](#t03) | 2 | D006～D007 | T02 | 待开始 | — |
 | [T04 建立基础存储与迁移](#t04) | 3 | D008～D010 | T02、T03 | 待开始 | — |
 | [T05 实现只读 Git 快照访问](#t05) | 2 | D011～D012 | T03、T04 | 待开始 | — |
@@ -156,12 +156,13 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 - 工期：3天；计划 D003～D005；里程碑 M0；对应原工作包 S02。
 - 前置：T01。
 - 输入与契约：主计划第 5 节；Snapshot/AnalysisRun 分离，Knowledge 内容修订与 state_version 分离。
-- 目标路径：`src/knowledge_ci/contracts/repository.py`、`src/knowledge_ci/contracts/knowledge.py`、`src/knowledge_ci/contracts/jobs.py`、`src/knowledge_ci/contracts/errors.py`、`var/local-checks/tests/unit/test_contracts.py`。
+- 目标路径：`src/knowledge_ci/contracts/{__init__,common,repository,evidence,knowledge,jobs,errors}.py`、`var/tmp/local-checks/tests/unit/`（临时验证后删除）。开工校准：新增`common`（基础类型被三个模块共用）与`evidence`（T10产出、T13/T18消费）；`config.py`/`cli.py`改用契约类型与错误格式；pyproject补pydantic直接依赖。
 - 第1天：定义仓库、快照、分析执行、符号、证据和任务模型；列必填、可空、ID及时间规范。
 - 第2天：定义知识、Claim、追问、审核、验证记录与状态转换；固定请求、响应和错误结构。
 - 第3天：补正反例与状态转换用例；核对幂等、租约、阻断追问、失效条件和发布前提。
 - 验收/合入：非法字段/状态组合被拒绝；无效引用、旧修订/旧状态版本的错误语义明确；各入口共享同一模型。
-- 建议分支：`codex/t02-domain-contracts`。
+- 实施记录：2026-10-20，用户分支`feat/hyw/T02`（基于main 4d5ea0a，未提交）。契约为不可变Pydantic模型加纯函数状态转换，持久化原子性由T04/T14/T15落实；134项临时测试、Ruff、wheel独立环境复验通过，详见第6节。
+- 建议分支：`codex/t02-domain-contracts`（仅原建议，实际以用户分支为准）。
 
 <a id="t03"></a>
 
@@ -750,6 +751,7 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 | --- | --- | --- | --- | --- | --- | --- |
 | T01 | 2026-10-19开始/2026-10-20完成 | 本次会话；人日由Recall补录 | 无业务阻塞；下载及本机临时目录权限已处理 | feat/hyw/T01 (419b71d～6117a83)，bug/fix/1020 (16ad54b后) | 2026-10-19：18项测试、Ruff、真实试点配置检查、独立wheel安装复验通过；见0001-baseline.md。2026-10-20：干净worktree复验、相对路径锚定修复、空loc错误前缀修复、文档更新、新增3项测试后21 passed | 后续Vue/JS/TS解析已重排；模型供应商/预算T12前确定 |
 | T01（本轮复审修复） | 2026-10-20开始/结束 | 本次会话；人日待Recall补录 | 无 | fix/hyw/1020；981d376、772bee7（本轮未自动提交） | Git输出显式解码、错误脱敏、CLAUDE.md冲突及目录规则修复；12项临时回归、真实试点校验、Ruff及差异检查通过，详情见0001-baseline.md | 两项审查问题已修复；临时材料已清理，待Recall验收 |
+| T02 | 2026-10-20开始/结束 | 本次会话；人日待Recall补录 | 无；T01待验收但已合入main，按用户安排在其上开工 | feat/hyw/T02（基于4d5ea0a，未提交） | Windows、Python 3.12.14、pydantic 2.14.1：`uv run --offline --locked --with pytest==9.1.1`临时测试134 passed（基础类型、模型不变量、知识/追问/Job转换、CAS、伪造/跨快照引用、迟到租约、幂等冲突、错误不回显、contracts依赖边界、CLI回归）；wheel+带哈希锁定依赖的独立环境同样134 passed且导入来自site-packages；Ruff check/format、`git diff --check`、`check-config --require-pilot`通过；wheel 16个文件含contracts、不含测试；临时材料已删除 | 存储层ID生成、事务内CAS与AuditEvent归T04/T14/T15；HTTP异常映射归T15/T20 |
 
 验收记录模板：
 
@@ -780,4 +782,5 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 | 2026-10-19 | v3 | 按用户要求，测试代码/样例/专用依赖配置与报告只保留本地；任务卡验证路径统一迁到Git忽略的var/local-checks/ |
 | 2026-10-20 | v4 | T01小问题修复完成：相对路径锚定、空loc错误前缀、测试用完即删规则、文档更新；T06建议分支名改为vue-ts-symbols |
 | 2026-10-20 | v5 | 修复Windows中文仓库路径解码和CLAUDE.md合并冲突；记录12项临时回归及真实试点校验结果，T01保持待验收 |
+| 2026-10-20 | v6 | T02共享契约完成待验收；校准T02目标路径（新增common、evidence模块，测试改用var/tmp/local-checks临时目录） |
 

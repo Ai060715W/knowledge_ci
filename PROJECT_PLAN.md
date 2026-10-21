@@ -6,7 +6,7 @@
 - 协作规范：[AGENTS.md](D:/knowledge_ci/AGENTS.md)、[CLAUDE.md](D:/knowledge_ci/CLAUDE.md)。
 - 逐步执行与排期：[TASK_PLAN.md](D:/knowledge_ci/TASK_PLAN.md)，每项2～3个工作日。
 - 已确认：当前由 Recall 一人开发；系统实现语言使用 Python；分支管理由 Recall 安排。
-- 当前阶段：T01工程与自动验证完成、待验收；已具备可安装Python包、配置、CLI与健康检查。扫描、数据库和审核业务尚未实现。
+- 当前阶段：T01工程与自动验证完成、待验收；T02共享契约完成、待验收。已具备可安装Python包、配置、CLI、健康检查及共享schema/状态规则。扫描、数据库和审核业务尚未实现。
 - 更新原则：范围、契约或排期变化时先更新本计划，再调整实现；已完成项必须附验证证据。
 
 ## 1. 项目目标与现状
@@ -170,7 +170,14 @@ knowledge_ci/
 
 ## 5. 开发前冻结的数据契约
 
-本节是字段级草案。S02 将其变为可执行 schema、校验样例和 API 契约；未完成该步骤不扩展工作台页面。
+本节是字段级基线。T02已在 `src/knowledge_ci/contracts/` 落地为可执行 schema、状态转换纯函数与错误码（待验收）；字段、状态机或错误语义的后续变更先改契约再改调用方。契约只校验规则并返回新的不可变对象，事务内的CAS比对、ID生成与审计写入由 T04/T14/T15 落实。
+
+T02 相对下表草案的已落地差异：
+
+- Job 增加 `partial` 终态，以及 repository_id、request_hash、requested_ref（仅展示）、max_attempts、lease_expires_at、progress、updated_at；对外读取用不含 lease_token 的 JobView。
+- Evidence 去掉 source_ref：locator 按 code/commit/human_answer 判别并定位来源，content_hash 作为产物内容寻址键。
+- Knowledge 增加 repository_id、当前修订的 review_status 与时间戳；KnowledgeRevision 增加 based_on_revision、content_hash、evidence_sufficiency、model_score、created_by，invalidation_conditions 改为显式 known/unknown 结构；Claim 增加 gap；Review 绑定 content_hash；Question 增加 adopted_evidence_id、resolution_note；Verification 增加 verification_id。
+- AuditEvent、模块排名和知识详情读视图分别在 T15、T08、T14 定义，T02 不预建。
 
 ### 5.1 基础对象
 
@@ -211,7 +218,7 @@ knowledge_ci/
 | 修订审核 | unreviewed / in_review / changes_requested / approved / rejected | 任意内容修改创建新修订并回到 unreviewed；批准不能自动继承 |
 | 新鲜度 | unknown / fresh / stale | 针对指定快照与范围记录；fresh 不代表在任意分支或未来 commit 都有效 |
 | 追问 | open / answered / resolved / cancelled | answered 后重新评估；只有证据被采纳或明确结案才 resolved |
-| 执行任务 | queued / running / succeeded / failed / cancelled | 失败保留阶段产物；重试增加 attempt；取消后不再提交后续结果 |
+| 执行任务 | queued / running / succeeded / partial / failed / cancelled | 失败保留阶段产物；可重试失败在上限内回 queued，重试增加 attempt；partial 表示部分输入失败且诊断可见；取消后不再提交后续结果 |
 
 编辑已发布知识时新建草稿修订，published_revision 仍指向旧的已批准修订，直到新修订被批准并发布。任务失败、模型重跑或后续草稿被驳回均不能破坏原已发布内容。
 
@@ -488,6 +495,7 @@ M0 确定暂定性能门槛、质量底线和硬预算；M1 根据实测记录�
 | 2026-10-19 | 根据静态设计说明建立计划；按用户补充改为单人推进、Python 实现；保留未来多人交接边界 | 计划完成，工程未启动 |
 | 2026-10-19 | 拆为40项2～3天任务，新增TASK_PLAN.md；按逐项工期替换粗估，提供建议分支与验收对应 | 细分计划完成，工程未启动 |
 | 2026-10-19 | 启动T01；试点改为用户指定Vue3Admin，选77e9634基线，调整后续目标解析任务 | T01工程与验证完成，待验收 |
+| 2026-10-20 | T02落地共享契约；第5节记录与草案的差异，执行任务状态增加partial | T02完成，待验收 |
 
 测试材料按用户要求不入库；验证结论可记入任务文档。逐任务状态、实际用时和验证证据写入TASK_PLAN.md；里程碑或范围变化时同步更新本文件摘要与决策。本文不替代代码接口或数据库迁移的真实实现。
 
