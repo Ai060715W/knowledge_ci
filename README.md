@@ -1,6 +1,6 @@
 # Knowledge CI
 
-面向代码仓库的知识发现与人工审核系统。当前为 T01 工程基线：提供配置校验、命令行入口和 HTTP 健康检查，尚未提供仓库分析或知识生成。
+面向代码仓库的知识发现与人工审核系统。当前为 T01 工程基线：提供配置校验、命令行入口和 HTTP 健康检查，尚未提供仓库分析或知识生成。T02 在 `src/knowledge_ci/contracts/` 增加了各入口共用的领域 schema、状态转换规则与错误码，运行行为不变；`KNOWLEDGE_CI_PILOT_LANGUAGE` 只接受契约定义的 `vue-typescript`。
 
 ## 环境与安装
 

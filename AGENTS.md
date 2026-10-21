@@ -33,8 +33,9 @@
 
 ### T01 结构与运行约定
 
-- `src/` 只放应用源包；`src/knowledge_ci/` 当前仅创建 `__init__.py`、`__main__.py`、`app.py`、`cli.py`、`config.py`，不预建业务目录。
-- 业务源码目录不放测试。T01测试临时放`var/tmp/local-checks/tests/`，验证后删除；测试专用工具通过临时环境按需提供，不纳入业务依赖或uv.lock。
+- `src/` 只放应用源包；`src/knowledge_ci/` 入口为 `__init__.py`、`__main__.py`、`app.py`、`cli.py`、`config.py`。T02起创建 `contracts/`，仅含 `__init__`、`common`、`repository`、`evidence`、`knowledge`、`jobs`、`errors` 模块；其余业务目录由对应任务创建，不预建。
+- `contracts/` 只依赖标准库与 pydantic，不 import 其他业务模块或配置；字段、状态机、错误语义变更先改契约再改调用方。
+- 业务源码目录不放测试。测试临时放`var/tmp/local-checks/tests/`（可按`unit`、`integration`分子目录），验证后删除；测试专用工具通过临时环境按需提供，不纳入业务依赖或uv.lock。
 - `docs/decisions/` 当前创建 `0001-baseline.md`，记录已落地技术决定、验证环境与未确定的试点信息；不存私有源码或凭据。
 - `.venv/` 为项目隔离环境；`var/cache/uv/` 为可重建依赖缓存，`var/cache/uv-bootstrap/` 为可重建的本地依赖工具；均不入 Git。任务临时验证环境放在 `var/tmp/`，验证后清理。
 - 工具自动生成的Python `__pycache__/` 可在所属模块内出现，忽略并按需清理；Ruff/pytest缓存分别放 `var/cache/ruff/`、`var/cache/pytest/`。构建包放 `var/artifacts/packages/`，文件名由构建工具生成，可重新构建；`.venv/`和缓存内部由相应工具管理，不手改依赖文件。
@@ -60,7 +61,7 @@
 
 ## 本阶段验证
 
-- 当前仅实施 T01：最小可安装工程、配置、空应用/CLI、健康检查与基线决策；不提前实现 T02 领域契约或后续扫描业务。
-- 验证锁文件安装、CLI 帮助/版本/配置检查、无效或缺失配置、健康请求与退出；在独立干净环境重复安装和验证。
-- 运行命令、环境、结果与未确定项写入 README、基线决策及 TASK_PLAN；真实试点未确定时 T01 保持进行中或待验收，不虚报完成。
+- 当前实施 T02：在 `src/knowledge_ci/contracts/` 冻结共享 schema、状态转换规则与错误语义，配置与 CLI 复用同一契约；不实现存储、迁移、HTTP 业务路由、扫描或模型调用（T04 起按任务实施）。
+- 验证契约正反例与状态转换、contracts 依赖边界、CLI 配置回归、锁文件安装及 wheel 内容；测试材料验证后删除。
+- 运行命令、环境与结果写入 TASK_PLAN，契约差异同步 PROJECT_PLAN 第5节；T01、T02 由 Recall 验收，不虚报完成。
 - 不修改原 HTML，不自动创建/切换分支、提交、推送或部署。
