@@ -11,7 +11,8 @@ from pydantic import ValidationError
 
 from knowledge_ci import __version__
 from knowledge_ci.app import create_app
-from knowledge_ci.config import Settings, load_settings, verify_pilot
+from knowledge_ci.config import load_settings, verify_pilot
+from knowledge_ci.contracts.errors import field_errors
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -55,8 +56,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             return 0
     except ValidationError as exc:
         errors = [
-            (f"{'.'.join(map(str, item['loc']))}: " if item["loc"] else "") + item["msg"]
-            for item in exc.errors(include_input=False, include_url=False)
+            f"{detail.field}: {detail.message}" if detail.field else detail.message
+            for detail in field_errors(exc)
         ]
         print("Configuration error: " + "; ".join(errors), file=sys.stderr)
         return 2
