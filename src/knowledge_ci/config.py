@@ -31,6 +31,14 @@ class Settings(BaseSettings):
     model_provider: Literal["mock"] = "mock"
     allow_source_egress: bool = False
     model_budget_usd: Decimal = Field(default=Decimal(0), ge=0)
+    data_dir: Path = Path("var")  # database and artifacts; see storage.database / artifacts
+
+    @field_validator("data_dir", mode="before")
+    @classmethod
+    def require_data_dir(cls, value: object) -> object:
+        if isinstance(value, str) and not value.strip():
+            raise ValueError("data_dir must not be blank")
+        return value
 
     @field_validator(
         "pilot_repository",
@@ -66,17 +74,20 @@ class Settings(BaseSettings):
 
 
 def load_settings(env_file: Path | str | None = ".env") -> Settings:
-    """Load settings and anchor relative pilot_repository to the configuration file directory."""
+    """Load settings and anchor relative pilot_repository and data_dir to the configuration
+    file directory."""
     settings = Settings(_env_file=env_file)
+    if env_file is None or env_file == ".env":
+        anchor = Path.cwd()
+    else:
+        anchor = Path(env_file).resolve().parent
     if (
         settings.pilot_repository is not None
         and not settings.pilot_repository.is_absolute()
     ):
-        if env_file is None or env_file == ".env":
-            anchor = Path.cwd()
-        else:
-            anchor = Path(env_file).resolve().parent
         settings.pilot_repository = anchor / settings.pilot_repository
+    if not settings.data_dir.is_absolute():
+        settings.data_dir = anchor / settings.data_dir
     return settings
 
 

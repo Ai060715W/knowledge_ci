@@ -71,8 +71,8 @@ P0 暂不承诺：全语言/全仓精准调用图、运行时数据流、多平�
 | 模块化单体 | 建议 | 一个代码库、一套契约；HTTP、CLI、worker 共享应用服务，后续可独立接手模块 |
 | FastAPI + Pydantic Settings | T01已落地并验证 | 复用校验模型生成 API 契约，减少调用方与服务端模型漂移 |
 | Jinja2 服务端页面，按需补少量浏览器脚本 | 建议 | 单人先完成审核流程；未来复杂交互可复用 API 更换前端 |
-| SQLAlchemy + Alembic | 建议 | 持久化与迁移有明确边界，为后续数据库迁移保留路径 |
-| SQLite 用于本机单用户 MVP | 建议，有适用边界 | 降低启动成本；单 worker、短事务、失败重试必须验证 |
+| SQLAlchemy + Alembic | T04已落地（2.1.6 / 1.20.1，待验收） | 持久化与迁移有明确边界，为后续数据库迁移保留路径；迁移随包放在 storage/migrations/ |
+| SQLite 用于本机单用户 MVP | T04已落地（WAL、BEGIN IMMEDIATE 写事务、写锁有界重试），有适用边界 | 降低启动成本；单 worker、短事务、失败重试已做临时验证，见[存储决策](docs/decisions/0010-storage-foundation.md) |
 | 共享服务或多 worker 前评估 PostgreSQL | 条件性决策 | 数据库变更需要迁移演练，不把 ORM 当作自动兼容保证 |
 | 本地证据文件 + 存储接口 | 建议 | 首期无需对象存储服务；证据引用使用逻辑 ID，避免数据库写死绝对路径 |
 | 模型提供方适配器 + 固定假响应 | 建议 | 在未选定供应商前可完成联调；真实输出需独立评估质量与成本 |
@@ -141,10 +141,10 @@ knowledge_ci/
 │   ├── review/                    # 审核、发布与审计规则
 │   ├── jobs/                      # 持久化任务、阶段、重试
 │   ├── storage/                   # 数据访问与产物存储适配器
+│   │   └── migrations/            # T04：Alembic 环境与有序版本，随包分发
 │   └── web/
 │       ├── templates/
 │       └── static/
-├── migrations/
 ├── docs/decisions/
 └── var/                           # Git忽略；运行数据、产物及tmp/local-checks临时验证
 ~~~
@@ -179,7 +179,7 @@ T02 相对下表草案的已落地差异：
 - Knowledge 增加 repository_id、当前修订的 review_status 与时间戳；KnowledgeRevision 增加 based_on_revision、content_hash、evidence_sufficiency、model_score、created_by，invalidation_conditions 改为显式 known/unknown 结构；Claim 增加 gap；Review 绑定 content_hash；Question 增加 adopted_evidence_id、resolution_note；Verification 增加 verification_id。
 - AuditEvent、模块排名和知识详情读视图分别在 T15、T08、T14 定义，T02 不预建。
 
-T03不改变上述契约。[合成历史复现规格](docs/decisions/0009-golden-fixtures.md)定义6次线性Git提交、Vue/TS/JS符号与import边、示例Git信号/Top-K、证据及3类追问。Recall已确认只长期保留规格与预期结果，生成器和样例验证后删除；后续按规格重建语义等价场景。人工oracle不代表T06～T10或模型模块已经实现，也不计入真实试点知识数量。
+T04同样不改契约：存储按字段镜像 Repository/Snapshot/AnalysisRun/Job/Evidence，数据库层重复身份、引用与租约约束，阶段产物以 `(analysis_run_id, stage, name)` 的逻辑产物ID引用内容哈希，约定见[存储决策](docs/decisions/0010-storage-foundation.md)。T03不改变上述契约。[合成历史复现规格](docs/decisions/0009-golden-fixtures.md)定义6次线性Git提交、Vue/TS/JS符号与import边、示例Git信号/Top-K、证据及3类追问。Recall已确认只长期保留规格与预期结果，生成器和样例验证后删除；后续按规格重建语义等价场景。人工oracle不代表T06～T10或模型模块已经实现，也不计入真实试点知识数量。
 
 ### 5.1 基础对象
 
@@ -480,7 +480,7 @@ M0 确定暂定性能门槛、质量底线和硬预算；M1 根据实测记录�
 | 首个目标仓库、路径、固定commit、知情者 | Vue3Admin，主基线77e9634，Recall | 已在T01选定；本地路径见基线决策；仅3次基线历史，知识动机仍需人工核验 |
 | 目标源码语言与结构 | Vue SFC/TS/JS，Vue3Admin/src，@/*别名 | 已确定；T03/T06/T07/T09/T27按该目标适配 |
 | 应用Python版本、依赖管理、锁文件 | Python3.12、uv、uv.lock | T01已完成锁定安装及独立环境复验，结果见基线决策 |
-| Web/存储建议是否采用 | FastAPI、Pydantic、Jinja2、SQLAlchemy、Alembic；本地 SQLite | 影响 S01/S03，须在写业务实现前落定 |
+| Web/存储建议是否采用 | FastAPI、Pydantic、Jinja2、SQLAlchemy、Alembic；本地 SQLite | FastAPI/Pydantic 已在T01落地；SQLAlchemy/Alembic/SQLite 已在T04落地（待验收）；Jinja2 在页面任务引入 |
 | 模型供应商、内容范围、单次/每月预算 | 用户允许后续外部模型；供应商/预算待定；当前mock、外发false、预算0 | T12真实接入前落定，当前不发起模型请求 |
 | 试点耗时、容量与质量阈值 | M0 定暂定门槛/硬预算，M1 实测留档校准，M4 验证 | 避免空写性能承诺或验收时临时改变标准 |
 | 运行环境 | 默认本机单用户；操作系统兼容范围明确 | 决定 Git 调用、路径处理、数据库和后续部署 |
@@ -499,6 +499,7 @@ M0 确定暂定性能门槛、质量底线和硬预算；M1 根据实测记录�
 | 2026-10-19 | 启动T01；试点改为用户指定Vue3Admin，选77e9634基线，调整后续目标解析任务 | T01工程与验证完成，待验收 |
 | 2026-10-20 | T02落地共享契约；第5节记录与草案的差异，执行任务状态增加partial | T02完成，待验收 |
 | 2026-10-21 | T03建立合成Git/知识场景复现规格，29项临时检查通过；只保留规格与预期，测试材料已删除 | T03实现与验证完成，待验收 |
+| 2026-10-22 | T04落地SQLite存储、Alembic迁移与内容寻址产物；存储选型由建议改为已落地，迁移目录校准到 storage/migrations/ | T02/T03经Recall确认完成；T04待验收 |
 
 测试材料按用户要求不入库；验证结论可记入任务文档。逐任务状态、实际用时和验证证据写入TASK_PLAN.md；里程碑或范围变化时同步更新本文件摘要与决策。本文不替代代码接口或数据库迁移的真实实现。
 
