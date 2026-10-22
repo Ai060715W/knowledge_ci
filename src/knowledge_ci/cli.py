@@ -13,6 +13,7 @@ from knowledge_ci import __version__
 from knowledge_ci.app import create_app
 from knowledge_ci.config import load_settings, verify_pilot
 from knowledge_ci.contracts.errors import field_errors
+from knowledge_ci.storage.database import StorageError, database_path, upgrade
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -26,6 +27,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     check.add_argument(
         "--require-pilot", action="store_true", help="Also verify the local Git commit"
     )
+    commands.add_parser("migrate", help="Create or upgrade the local database")
     commands.add_parser("serve", help="Start the local HTTP application")
     args = parser.parse_args(argv)
 
@@ -54,6 +56,13 @@ def main(argv: Sequence[str] | None = None) -> int:
                 result["pilot"] = verify_pilot(settings)
             print(json.dumps(result, ensure_ascii=False, indent=2))
             return 0
+        if args.command == "migrate":
+            revision = upgrade(database_path(settings.data_dir))
+            print(json.dumps({"status": "ok", "revision": revision}, indent=2))
+            return 0
+    except StorageError as exc:
+        print(f"Storage error: {exc}", file=sys.stderr)
+        return 2
     except ValidationError as exc:
         errors = [
             f"{detail.field}: {detail.message}" if detail.field else detail.message
