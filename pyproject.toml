@@ -9,14 +9,20 @@ description = "Evidence-based knowledge discovery and human review for code repo
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
 dependencies = [
+  "alembic>=1.16,<2",
   "fastapi>=0.115,<1",
   "pydantic>=2.9,<3",
   "pydantic-settings>=2.6,<3",
+  "sqlalchemy>=2.0,<3",
   "uvicorn>=0.30,<1",
 ]
 
 [project.scripts]
 knowledge-ci = "knowledge_ci.cli:main"
+
+[tool.alembic]
+# Authoring revisions only; the application migrates through knowledge_ci.storage.database.
+script_location = "%(here)s/src/knowledge_ci/storage/migrations"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/knowledge_ci"]
