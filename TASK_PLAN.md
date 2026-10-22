@@ -1,10 +1,10 @@
 # Knowledge CI 逐步任务计划书
 
-- 更新日期：2026-10-21。
+- 更新日期：2026-10-22。
 - 当前负责人：Recall；系统实现语言：Python；分支创建和合并由 Recall 管理。
 - 本文件负责逐任务排期、状态、实际用时与验收记录；[主计划](D:/knowledge_ci/PROJECT_PLAN.md)负责需求范围、架构、数据契约和阶段验收基线。
 - 共 40 项任务，每项 2～3 个工作日，平均 2.65 天。优先执行 P0 的 24 项任务；P1/P2 是后续预备队列。
-- T01～T03实现与自动验证完成，待Recall验收；T03按用户指示在包含T02的main（5b78cc9）上完成，保留策略已确认。卡片末尾分支名仍是建议，目标文件按实施进度创建。
+- T02、T03已由Recall确认完成（2026-10-22开工T04时说明）；T01仍待验收。T04实现与自动验证完成，待Recall验收。卡片末尾分支名仍是建议，目标文件按实施进度创建。
 
 ## 1. 排期怎么使用
 
@@ -53,9 +53,9 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 | 任务 | 天数 | 相对工作日 | 技术前置 | 状态 | 实际天数 |
 | --- | --- | --- | --- | --- | --- |
 | [T01 确定试点与最小 Python 工程](#t01) | 2 | D001～D002 | 无 | 待验收 | 1 |
-| [T02 冻结共享模型与状态契约](#t02) | 3 | D003～D005 | T01 | 待验收 | 1 |
-| [T03 建立可重复的 Git 与知识样例](#t03) | 2 | D006～D007 | T02 | 待验收 | 1 |
-| [T04 建立基础存储与迁移](#t04) | 3 | D008～D010 | T02、T03 | 待开始 | — |
+| [T02 冻结共享模型与状态契约](#t02) | 3 | D003～D005 | T01 | 已完成 | 1 |
+| [T03 建立可重复的 Git 与知识样例](#t03) | 2 | D006～D007 | T02 | 已完成 | 1 |
+| [T04 建立基础存储与迁移](#t04) | 3 | D008～D010 | T02、T03 | 待验收 | 1 |
 | [T05 实现只读 Git 快照访问](#t05) | 2 | D011～D012 | T03、T04 | 待开始 | — |
 | [T06 解析 Vue/JS/TS 并提取符号](#t06) | 3 | D013～D015 | T05 | 待开始 | — |
 | [T07 建立 import 依赖图](#t07) | 2 | D016～D017 | T06 | 待开始 | — |
@@ -111,7 +111,7 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 - 跨模块模型沿用主计划第5节；已有字段、错误语义和状态机变更先更新契约/样例，再改调用方。
 - 新目录/子目录先依照 AGENTS.md 与 CLAUDE.md 补齐结构、命名和清理约定，再创建实现文件。
 - 任务卡中的路径均相对于D:\knowledge_ci。业务文件入库；测试代码、样例、配置和报告临时放var/tmp/local-checks/，验证后删除，不入库、不打包，验证工具不写入业务依赖。旧卡片的var/local-checks/在开工时校准到现行路径。
-- 数据迁移只新增有序迁移，不随意改写已应用版本；任务卡中的 migrations/ 指该任务实际生成的版本文件，开工后记录准确名称。
+- 数据迁移只新增有序迁移，不随意改写已应用版本；任务卡中的 migrations/ 指该任务在`src/knowledge_ci/storage/migrations/versions/`实际生成的版本文件（T04起，四位序号rev-id），开工后记录准确名称。
 - 安全、幂等、CAS、任务租约等基础规则从首次实现相关入口时生效；后期任务负责补齐故障场景，不把基础正确性延后。
 - 在第6节填写实际用时、分支、提交或PR、验证证据与遗留项，再将总表状态改为已完成。
 
@@ -187,12 +187,13 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 - 工期：3天；计划 D008～D010；里程碑 M1；对应原工作包 S03。
 - 前置：T02、T03。
 - 输入与契约：Repository/Snapshot/AnalysisRun/Job/Evidence 契约；知识表按 T14 再增量迁移。
-- 目标路径：`src/knowledge_ci/storage/database.py`、`src/knowledge_ci/storage/models.py`、`src/knowledge_ci/storage/artifacts.py`、`migrations/env.py`、`var/local-checks/tests/integration/test_storage.py`。
+- 目标路径（已校准）：`src/knowledge_ci/storage/{__init__,database,models,artifacts,repository_store,job_store,evidence_store}.py`、`src/knowledge_ci/storage/migrations/{env.py,script.py.mako,versions/0001_initial_storage.py}`、`config.py`（DATA_DIR）、`cli.py`（migrate）、`docs/decisions/0010-storage-foundation.md`；临时测试`var/tmp/local-checks/tests/integration/`验证后删除。开工校准：迁移随包放入storage（wheel只打包src，根目录迁移无法随安装分发）；T05/T10/T11卡片无存储文件，故按契约模块增加三个store。
 - 第1天：搭建数据库会话、迁移入口与基础表；固定外键、唯一键和任务/产物去重约束。
 - 第2天：实现事务访问与逻辑产物 ID、内容哈希存取；不把机器绝对路径写成业务引用。
 - 第3天：验证空库升级、事务回滚、唯一约束、短事务及写锁重试；补基础迁移用例。
 - 验收/合入：空库可初始化；重复标识不生成重复记录；失败事务不留下半条任务/产物引用；文件可按逻辑ID回读。
-- 建议分支：`codex/t04-storage-foundation`。
+- 实施记录：2026-10-22，用户分支`feat/hyw/T04`（基于main 895b97a，未提交）。落定SQLite（WAL）+SQLAlchemy 2.1.6+Alembic 1.20.1，迁移0001含7张表；写事务BEGIN IMMEDIATE+有界重试，产物内容寻址并按逻辑ID回读。34项临时集成测试在开发环境与wheel独立环境均通过，详见第6节与0010决策。
+- 建议分支：`codex/t04-storage-foundation`（仅原建议，实际以用户分支为准）。
 
 <a id="t05"></a>
 
@@ -756,6 +757,17 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 | T01（本轮复审修复） | 2026-10-20开始/结束 | 本次会话；人日待Recall补录 | 无 | fix/hyw/1020；981d376、772bee7（本轮未自动提交） | Git输出显式解码、错误脱敏、CLAUDE.md冲突及目录规则修复；12项临时回归、真实试点校验、Ruff及差异检查通过，详情见0001-baseline.md | 两项审查问题已修复；临时材料已清理，待Recall验收 |
 | T02 | 2026-10-20开始/结束 | 本次会话；人日待Recall补录 | 无；T01待验收但已合入main，按用户安排在其上开工 | feat/hyw/T02（基于4d5ea0a，未提交） | Windows、Python 3.12.14、pydantic 2.14.1：`uv run --offline --locked --with pytest==9.1.1`临时测试134 passed（基础类型、模型不变量、知识/追问/Job转换、CAS、伪造/跨快照引用、迟到租约、幂等冲突、错误不回显、contracts依赖边界、CLI回归）；wheel+带哈希锁定依赖的独立环境同样134 passed且导入来自site-packages；Ruff check/format、`git diff --check`、`check-config --require-pilot`通过；wheel 16个文件含contracts、不含测试；临时材料已删除 | 存储层ID生成、事务内CAS与AuditEvent归T04/T14/T15；HTTP异常映射归T15/T20 |
 | T03 | 2026-10-21开始/结束 | 本次会话；人日待Recall补录；最终验证137.273秒 | 无业务等待；tempfile的Windows ACL问题已通过继承ACL的普通mkdir解决，失败空目录已清理 | main，基于5b78cc9；未提交/无PR | Windows、Python 3.12.14、pydantic 2.14.1、Git 2.55.0.windows.3、uv 0.13.1；标准库unittest最终29 passed，命令与覆盖见下；6个commit/tree及全部blob双生成完全一致；uv锁检查、差异检查通过；整个var/tmp/local-checks/已删除 | 待Recall验收；后续按0009规格重建语义等价样例，AST/图/排名/采集实现仍归T06～T10；未创建真实junction，reparse拒绝防护仅代码审查 |
+| T04 | 2026-10-22开始/结束 | 本次会话；人日待Recall补录 | 无业务等待；依赖下载需联网（PyPI可达但慢，约20秒完成） | feat/hyw/T04（基于895b97a，未提交） | Windows、Python 3.12.14、SQLite 3.53.1、SQLAlchemy 2.1.6、Alembic 1.20.1、pydantic 2.14.1、uv 0.13.1：34项临时集成测试开发环境19.44秒、wheel独立环境19.37秒均passed；`alembic check`无差异；Ruff、`uv lock --check`、`git diff --check`通过；wheel 26个文件含迁移、不含测试；serve健康检查与退出正常；临时材料已删除 | 存储错误码映射归T11/T20；孤儿产物与备份归T22；知识相关表归T14/T15 |
+
+### T04 验证证据
+
+- 运行命令（脚本已按约定删除）：`uv run --offline --locked --with pytest==9.1.1 python -m pytest -p no:cacheprovider --basetemp var/tmp/local-checks/pytest-tmp var/tmp/local-checks/tests/integration`，`34 passed in 19.44s`；并发/写锁/中断写者3项另重复6次均通过。pytest仅由`--with`临时提供，未写入业务依赖。
+- 迁移（6项）：空库（中文+空格路径）→0001，WAL、foreign_keys=1、synchronous=FULL、busy_timeout=5000；`compare_metadata`为空且与`create_all`的DDL逐行一致；重复upgrade幂等、downgrade到base再升级；未初始化库不被创建；未知revision与损坏文件返回StorageError；迁移后写锁已释放。
+- 身份与约束（15项）：重复写仓库/快照/run/Job不增行；不同配置得到新run；同commit不同tree、同幂等键不同请求、同产物名不同内容均为idempotency_conflict；证据须先登记内容，按(快照,定位,内容)去重，`get_evidence`结果供`reference_errors`识别跨快照与伪造ID；绕过契约的行被数据库拒绝（跨仓库/跨快照Job、非running持租约、running无租约、超attempt、非法状态/阶段/来源、model/prompt单独出现、非法哈希、负大小、悬空引用）；naive时间拒绝、+08:00读回UTC。
+- 事务与锁（6项）：Job+产物引用同事务抛异常后零行，文件可复用；租约失效时同事务的产物引用一并回滚；claim→advance_stage+产物→heartbeat→complete与T02纯函数一致；失败JSON回读、身份字段不可改；子进程写入50行后被强杀，读者未见未提交行、重开无残留；持写锁时读不阻塞、短预算抛StorageBusyError、长预算在释放后成功；异常后锁立即释放、只读会话写入被拒。
+- 产物、CLI与边界（7项）：按逻辑ID回读、篡改与缺失报ArtifactIntegrityError、重新put修复、`path_for`拒绝越界/大写/换行哈希；16线程并发put同1MiB内容只留一个文件（首轮在Windows触发替换PermissionError，已加有界重试后通过）；业务文本列无机器绝对路径（allowed_root除外）；`migrate`两次退出0且不回显路径，损坏库、DATA_DIR为文件、空DATA_DIR退出2且无traceback；`--version`、`check-config --require-pilot`回归；AST确认contracts只依赖pydantic、storage不依赖config/cli/app/web、迁移版本只依赖alembic/sqlalchemy。
+- 打包与独立环境：`uv build --offline --no-sources`得wheel 26个文件（含`storage/migrations/env.py`、`script.py.mako`、`versions/0001_initial_storage.py`）；`uv export --locked`带哈希清单→`uv venv`→`uv pip sync --require-hashes`→`uv pip install --no-deps` wheel；导入来自该环境site-packages，`knowledge-ci migrate`成功，34项同样通过。
+- 其他：`alembic -x db=<库> check`无新操作；`serve`在8765端口返回/healthz后停止；Ruff `check`（全src）与`format --check`（storage、cli）通过，config.py保持原88列风格未重排；`var/tmp/local-checks/`整目录删除，项目内未生成`var/db/`。
 
 ### T03 验证证据
 
@@ -797,4 +809,5 @@ P1/P2的序号与相对工作日用于容量预留，不构成现在必须投入
 | 2026-10-20 | v5 | 修复Windows中文仓库路径解码和CLAUDE.md合并冲突；记录12项临时回归及真实试点校验结果，T01保持待验收 |
 | 2026-10-20 | v6 | T02共享契约完成待验收；校准T02目标路径（新增common、evidence模块，测试改用var/tmp/local-checks临时目录） |
 | 2026-10-21 | v7 | T03复现规格与29项临时验证完成待验收；按Recall选择只留规格/预期，删除所有样例与测试；避免后续决策编号冲突，使用0009 |
+| 2026-10-22 | v8 | Recall确认T02、T03完成；T04存储与迁移完成待验收，34项临时验证通过；迁移位置校准到`storage/migrations/`，决策记录0010 |
 

@@ -1,6 +1,6 @@
 # Knowledge CI
 
-面向代码仓库的知识发现与人工审核系统。当前为 T01 工程基线：提供配置校验、命令行入口和 HTTP 健康检查，尚未提供仓库分析或知识生成。T02 在 `src/knowledge_ci/contracts/` 增加了各入口共用的领域 schema、状态转换规则与错误码，运行行为不变；`KNOWLEDGE_CI_PILOT_LANGUAGE` 只接受契约定义的 `vue-typescript`。
+面向代码仓库的知识发现与人工审核系统。当前为 T01 工程基线：提供配置校验、命令行入口和 HTTP 健康检查，尚未提供仓库分析或知识生成。T02 在 `src/knowledge_ci/contracts/` 增加了各入口共用的领域 schema、状态转换规则与错误码，运行行为不变；`KNOWLEDGE_CI_PILOT_LANGUAGE` 只接受契约定义的 `vue-typescript`。T04 增加本地 SQLite 存储、Alembic 迁移与内容寻址产物，以及 `migrate` 命令；扫描与页面尚未接入存储。
 
 ## 环境与安装
 
@@ -48,6 +48,7 @@ Git 路径输出按 UTF-8 解码，支持 Windows 中文及带空格的仓库路
 | KNOWLEDGE_CI_MODEL_PROVIDER | mock | T01仅支持假响应 |
 | KNOWLEDGE_CI_ALLOW_SOURCE_EGRESS | false | T01禁止源码外发 |
 | KNOWLEDGE_CI_MODEL_BUDGET_USD | 0 | T01无外部模型调用 |
+| KNOWLEDGE_CI_DATA_DIR | var | 本地数据库与产物根目录；相对路径锚定规则同PILOT_REPOSITORY |
 
 未配置试点时，空应用与普通 check-config 可启动；涉及试点的检查必须显式执行：
 
@@ -75,6 +76,18 @@ KNOWLEDGE_CI_PILOT_OWNER=Recall
 ~~~
 
 用户允许后续接入外部模型；供应商、内容范围与预算尚未确定。当前配置不能开启真实模型，T12接入前再记录具体约定。
+
+## 数据库与产物
+
+首次使用及每次升级应用后执行迁移；空库会被创建，已有库升级到最新版本，重复执行无副作用：
+
+~~~powershell
+uv run --locked knowledge-ci migrate
+~~~
+
+成功时输出 `{"status": "ok", "revision": "0001"}`。数据库位于 `<DATA_DIR>/db/knowledge_ci.sqlite3`（含 SQLite 自管的 `-wal`/`-shm`），产物位于 `<DATA_DIR>/artifacts/objects/sha256/`，均被 Git 忽略。不要手改或单独删除这些文件；清理前先备份并核对引用。未迁移时存储层报"未初始化"，`serve` 不会自动迁移。数据库忙、位置不可访问或文件损坏时退出码为2，错误不回显路径。
+
+存储选型、事务与重试、去重键和新增迁移的步骤见 [docs/decisions/0010-storage-foundation.md](docs/decisions/0010-storage-foundation.md)。
 
 ## 本地验收
 
